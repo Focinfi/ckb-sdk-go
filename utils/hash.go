@@ -1,8 +1,6 @@
 package utils
 
 import (
-	"fmt"
-
 	"github.com/Focinfi/ckb-sdk-go/address"
 	"github.com/Focinfi/ckb-sdk-go/crypto/blake2b"
 	"github.com/Focinfi/ckb-sdk-go/serializers"
@@ -15,7 +13,6 @@ func ScriptHash(script ckbtypes.Script) (*types.HexStr, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("bytes:", types.NewHexStr(slr.Serialize()).Hex())
 	hash, err := blake2b.Digest(slr.Serialize())
 	if err != nil {
 		return nil, err
@@ -41,4 +38,16 @@ func LockScriptHash(pubKey string) (*types.HexStr, error) {
 		return nil, err
 	}
 	return ScriptHash(*script)
+}
+
+func TransactionHash(transaction ckbtypes.Transaction) (*types.HexStr, error) {
+	slr, err := serializers.NewTransaction(transaction)
+	if err != nil {
+		return nil, err
+	}
+	hash, err := blake2b.Digest(slr.Serialize())
+	if err != nil {
+		return nil, err
+	}
+	return types.NewHexStr(hash), nil
 }

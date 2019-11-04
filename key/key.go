@@ -54,16 +54,20 @@ func (key *Key) Sign(hexStr string) (*types.HexStr, error) {
 	return types.NewHexStr(sign.Serialize()), nil
 }
 
-// SignRecoverableFor32Bytes
-func (key *Key) SignRecoverableFor32Bytes(hex32BytesStr string) (*types.HexStr, error) {
+// SignRecoverableFor32BytesHex
+func (key *Key) SignRecoverableFor32BytesHex(hex32BytesStr string) (*types.HexStr, error) {
 	dataHex, err := types.ParseHexStr(hex32BytesStr)
 	if err != nil {
 		return nil, errtypes.WrapErr(errtypes.HexErrStrFormatWrong, err)
 	}
-	if dataHex.Len() != 32 {
+	return key.SignRecoverableFor32Bytes(dataHex.Bytes())
+}
+
+func (key *Key) SignRecoverableFor32Bytes(data []byte) (*types.HexStr, error) {
+	if len(data) != 32 {
 		return nil, errtypes.WrapErr(errtypes.CryptoErrDataByteCountNot32, nil)
 	}
-	sign, err := secp256k1.Sign(dataHex.Bytes(), key.privKeyHex.Bytes())
+	sign, err := secp256k1.Sign(data, key.privKeyHex.Bytes())
 	if err != nil {
 		return nil, errtypes.WrapErr(errtypes.CryptoErrSignRecoverableFail, err)
 	}

@@ -82,7 +82,7 @@ func ParseHexUint64(str string) (*HexUint64, error) {
 	if err != nil {
 		return nil, err
 	}
-	n, err := strconv.ParseInt(hexStr.Hex()[2:], 16, 64)
+	n, err := strconv.ParseUint(hexStr.Hex()[2:], 16, 64)
 	if err != nil {
 		return nil, errors.New("parse hex number err: " + err.Error())
 	}

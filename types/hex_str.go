@@ -16,9 +16,16 @@ type HexStr struct {
 }
 
 func ParseHexStr(hexStr string) (*HexStr, error) {
-	if !strings.HasPrefix(hexStr, HexStrPrefix) || len(hexStr) <= 2 {
+	if !strings.HasPrefix(hexStr, HexStrPrefix) {
 		return nil, errtypes.WrapErr(errtypes.HexErrNeed0xPrefix, nil)
 	}
+	if len(hexStr) == 2 {
+		return &HexStr{
+			bytes:  []byte{},
+			hexStr: HexStrPrefix,
+		}, nil
+	}
+
 	body := hexStr[2:]
 	if len(body)%2 == 1 {
 		body = "0" + body
@@ -62,4 +69,8 @@ func (hs *HexStr) Hex() string {
 
 func (hs *HexStr) Len() int {
 	return len(hs.Bytes())
+}
+
+func (hs *HexStr) Append(a HexStr) *HexStr {
+	return NewHexStr(append(hs.Bytes(), a.Bytes()...))
 }

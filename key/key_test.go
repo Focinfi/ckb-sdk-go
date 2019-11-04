@@ -39,7 +39,7 @@ func TestSignRecoverable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	gotSign, err := key.SignRecoverableFor32Bytes("0x1000000000000000000000000000000000000000000000000000000000000000")
+	gotSign, err := key.SignRecoverableFor32BytesHex("0x1000000000000000000000000000000000000000000000000000000000000000")
 	if err != nil {
 		t.Fatal(err)
 	}

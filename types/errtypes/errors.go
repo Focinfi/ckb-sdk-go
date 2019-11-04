@@ -15,6 +15,7 @@ const (
 	RPCErrResponseDataBroken        ErrType = "rpc-response-data-broken-error"
 	RPCErrGetInputCapacityTooSmall  ErrType = "rpc-get-input-capacity-too-small-error"
 	RPCErrGetInputCapacityNotEnough ErrType = "rpc-input-capacity-not-enough-error"
+	RPCErrGetGenesisBlockBroken     ErrType = "rpc-get-genesis-block-broken-error"
 )
 
 // address error
@@ -69,6 +70,14 @@ const (
 	SerializationErrInvalidOutput        ErrType = "serialization-invalid-output-error"
 	SerializationErrInvalidOutputData    ErrType = "serialization-invalid-output-data-error"
 	SerializationErrInvalidWitness       ErrType = "serialization-invalid-witness-error"
+)
+
+// generate transaction error
+const (
+	GenTransErrGetOutputLockByteSizeFail ErrType = "gen-trans-get-output-lock-byte-size-error"
+	GenTransErrGetOutputTypeByteSizeFail ErrType = "gen-trans-get-output-type-byte-size-error"
+	GenTransErrWitnessNumLessThanInputs  ErrType = "gen-trans-witness-num-not-math-inputs-error"
+	GenTransErrSignFail                  ErrType = "gen-trans-sign-fail-error"
 )
 
 type Error struct {

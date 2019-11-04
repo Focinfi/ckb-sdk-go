@@ -31,7 +31,7 @@ func Parse(address string, mode types.Mode) ([]string, error) {
 
 // ParseShortPayloadAddress
 // address = ckt/ckb | 0x01 | code_hash_index | single_arg
-// return = [hex(code_hash_index), hex(single_arg)]
+// return = [0x01, hex(code_hash_index), hex(single_arg)]
 func ParseShortPayloadAddress(address string, mode types.Mode) ([]string, error) {
 	prefix, payload, err := decodeAddress(address)
 	if err != nil {
@@ -45,6 +45,14 @@ func ParseShortPayloadAddress(address string, mode types.Mode) ([]string, error)
 	}
 	formatType := addrtypes.FormatType(payload[0])
 	return parseShortPayloadAddress(formatType, payload[1:])
+}
+
+func ParseShortPayloadAddressArg(address string, mode types.Mode) (string, error) {
+	args, err := ParseShortPayloadAddress(address, mode)
+	if err != nil {
+		return "", err
+	}
+	return args[2], nil
 }
 
 func parseShortPayloadAddress(formatType addrtypes.FormatType, payload []byte) ([]string, error) {

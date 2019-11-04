@@ -11,6 +11,13 @@ type Transaction struct {
 	serializer     *Table
 }
 
+func (transaction *Transaction) Serialize() []byte {
+	if transaction.serializer != nil {
+		return transaction.serializer.Serialize()
+	}
+	return nil
+}
+
 func NewTransaction(transaction ckbtypes.Transaction) (*Transaction, error) {
 	rawTrans, err := NewRawTransaction(transaction)
 	if err != nil {

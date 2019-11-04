@@ -2,15 +2,16 @@ package wallet
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/Focinfi/ckb-sdk-go/utils"
+	"github.com/Focinfi/ckb-sdk-go/address"
 
 	"github.com/Focinfi/ckb-sdk-go/cellcollector"
-
 	"github.com/Focinfi/ckb-sdk-go/key"
 	"github.com/Focinfi/ckb-sdk-go/rpc"
 	"github.com/Focinfi/ckb-sdk-go/types"
 	"github.com/Focinfi/ckb-sdk-go/types/ckbtypes"
+	"github.com/Focinfi/ckb-sdk-go/utils"
 )
 
 type Wallet struct {
@@ -62,7 +63,65 @@ func (wallet *Wallet) GetUnspentCells(ctx context.Context, needCap uint64) ([]ck
 }
 
 func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacity uint64, data []byte, fee uint64, useDepGroup bool) (*ckbtypes.Transaction, error) {
-	return nil, nil
+	arg, err := address.ParseShortPayloadAddressArg(targetAddr, wallet.Key.Address.Mode)
+	if err != nil {
+		return nil, err
+	}
+	dataHex := types.NewHexStr(data)
+	output := ckbtypes.Output{
+		Capacity: types.HexUint64(capacity).Hex(),
+		Lock: ckbtypes.Script{
+			Args:     arg,
+			CodeHash: types.BlockAssemblerCodeHash,
+			HashType: ckbtypes.HashTypeType,
+		},
+	}
+	outputByteSize, err := output.ByteSize()
+	if err != nil {
+		return nil, err
+	}
+	changeOutput := ckbtypes.Output{Lock: *wallet.Lock()}
+	minChangeByteSize, err := changeOutput.ByteSize()
+	if err != nil {
+		return nil, err
+	}
+	minCap := (outputByteSize + uint64(dataHex.Len())) * types.OneCKBShannon
+	minChangeCap := (minChangeByteSize + uint64(dataHex.Len())) * types.OneCKBShannon
+	inputs, inputCap, err := wallet.GatherInputs(ctx, capacity, minCap, minChangeCap, fee)
+	if err != nil {
+		return nil, err
+	}
+	outputs := []ckbtypes.Output{output}
+	outputsData := []string{dataHex.Hex()}
+	if changeCap := inputCap - (capacity + fee); changeCap > 0 {
+		changeOutput.Capacity = types.HexUint64(changeCap).Hex()
+		outputs = append(outputs, changeOutput)
+		outputsData = append(outputsData, types.HexStrPrefix)
+	}
+	fmt.Println("outputsData:", outputsData)
+	tx := &ckbtypes.Transaction{
+		Version:     types.HexUint64(0).Hex(),
+		CellDeps:    []ckbtypes.CellDep{},
+		Inputs:      inputs,
+		Outputs:     outputs,
+		OutputsData: outputsData,
+		Witnesses:   utils.EmptyWitnessesByLen(len(inputs)),
+	}
+
+	secp256k1OutPoint, _, err := utils.GetSecp256k1OutPointAndScriptHash(wallet.Client)
+	if err != nil {
+		return nil, err
+	}
+	if useDepGroup {
+		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeDepGroup, OutPoint: *secp256k1OutPoint})
+	} else {
+		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeCode, OutPoint: *secp256k1OutPoint})
+		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeCode, OutPoint: *secp256k1OutPoint})
+	}
+	if err := utils.SignTransaction(*wallet.Key, tx); err != nil {
+		return nil, err
+	}
+	return tx, nil
 }
 
 func (wallet *Wallet) SendCapacity(ctx context.Context, targetAddr string, capacity uint64, data []byte, fee uint64) {
@@ -92,15 +151,20 @@ func (wallet *Wallet) SendTransaction(ctx context.Context, transaction ckbtypes.
 	return "", nil
 }
 
-func (wallet *Wallet) GatherInputs(ctx context.Context, capacity, minCap, minChangeCap, fee uint64) ([]ckbtypes.Input, error) {
-	return nil, nil
+func (wallet *Wallet) GatherInputs(ctx context.Context, capacity, minCap, minChangeCap, fee uint64) ([]ckbtypes.Input, uint64, error) {
+	collector := cellcollector.NewCellCollector(wallet.Client, wallet.SkipDataAndType)
+	return collector.GatherInputs(ctx, []string{wallet.lockHashHex.Hex()}, capacity, minChangeCap, minChangeCap, fee)
 }
 
-func (wallet *Wallet) Lock() ckbtypes.Script {
+func (wallet *Wallet) Lock() *ckbtypes.Script {
 	if wallet.lock == nil {
-		// TODO: init lock
+		wallet.lock = &ckbtypes.Script{
+			Args:     wallet.Key.Address.PubKey.Blake160.Hex(),
+			CodeHash: types.BlockAssemblerCodeHash,
+			HashType: ckbtypes.HashTypeType,
+		}
 	}
-	return *wallet.lock
+	return wallet.lock
 }
 
 func (wallet *Wallet) CodeHash(ctx context.Context) (string, error) {

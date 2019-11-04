@@ -37,7 +37,7 @@ func NewCellDepFixVec(cds []ckbtypes.CellDep) (*FixVec, error) {
 			serializer: &Struct{*outpoint, *depType},
 		})
 	}
-	vec, err := NewFixVec(OutPointCapacity, cellDeps)
+	vec, err := NewFixVec(OutPointCapacity+DepTypeCapacity, cellDeps)
 	if err != nil {
 		return nil, errtypes.WrapErr(errtypes.SerializationErrInvalidCellDep, err)
 	}

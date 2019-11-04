@@ -1,8 +1,6 @@
 package blake2b
 
 import (
-	"encoding/hex"
-
 	"github.com/dchest/blake2b"
 )
 
@@ -16,12 +14,4 @@ func Digest(data []byte) ([]byte, error) {
 	}
 	h.Write(data)
 	return h.Sum(nil), nil
-}
-
-func HexDigest(data []byte) (string, error) {
-	b, err := Digest(data)
-	if err != nil {
-		return "", err
-	}
-	return "0x" + hex.EncodeToString(b), nil
 }

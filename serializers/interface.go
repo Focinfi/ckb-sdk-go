@@ -9,7 +9,8 @@ const (
 	Uint64Capacity         = 8
 	Byte32Capacity         = 32
 	ScriptHashTypeCapacity = 1
-	OutPointCapacity       = Uint64Capacity + Byte32Capacity
+	DepTypeCapacity        = 1
+	OutPointCapacity       = Uint32Capacity + Byte32Capacity
 	InputCapacity          = OutPointCapacity + Uint64Capacity
 )
 
