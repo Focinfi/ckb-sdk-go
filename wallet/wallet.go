@@ -2,6 +2,7 @@ package wallet
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Focinfi/ckb-sdk-go/address"
 	"github.com/Focinfi/ckb-sdk-go/cellcollector"
@@ -143,11 +144,12 @@ func (wallet *Wallet) GetTransaction(ctx context.Context, hash string) (*ckbtype
 }
 
 func (wallet *Wallet) BlockAssemblerConfig() string {
-	//	return fmt.Sprintf(
-	//		`[block_assembler]
-	//code_hash = %s
-	//args = %s`)
-	return ""
+	return fmt.Sprintf(
+		`[block_assembler]
+	code_hash = %s
+	args = %s`,
+		wallet.Lock().CodeHash,
+		wallet.Lock().Args)
 }
 
 func (wallet *Wallet) SendTransaction(ctx context.Context, transaction ckbtypes.Transaction) (string, error) {
@@ -170,6 +172,6 @@ func (wallet *Wallet) Lock() *ckbtypes.Script {
 	return wallet.lock
 }
 
-func (wallet *Wallet) CodeHash(ctx context.Context) (string, error) {
-	return "", nil
+func (wallet *Wallet) CodeHash(ctx context.Context) string {
+	return wallet.Lock().CodeHash
 }
