@@ -107,15 +107,15 @@ func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacit
 		Witnesses:   utils.EmptyWitnessesByLen(len(inputs)),
 	}
 
-	secp256k1OutPoint, _, err := utils.GetSecp256k1OutPointAndScriptHash(wallet.Client)
+	sysCells, err := utils.LoadSystemCells(*wallet.Client)
 	if err != nil {
 		return nil, err
 	}
 	if useDepGroup {
-		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeDepGroup, OutPoint: *secp256k1OutPoint})
+		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeDepGroup, OutPoint: *sysCells.Secp256k1GroupOutPoint})
 	} else {
-		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeCode, OutPoint: *secp256k1OutPoint})
-		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeCode, OutPoint: *secp256k1OutPoint})
+		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeCode, OutPoint: *sysCells.Secp256k1CodeOutPoint})
+		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeCode, OutPoint: *sysCells.Secp256k1CodeOutPoint})
 	}
 	if err := utils.SignTransaction(*wallet.Key, tx); err != nil {
 		return nil, err
@@ -132,7 +132,63 @@ func (wallet *Wallet) SendCapacity(ctx context.Context, targetAddr string, capac
 }
 
 func (wallet *Wallet) DepositToDAO(ctx context.Context, capacity, fee uint64) (*ckbtypes.OutPoint, error) {
-	return nil, nil
+	sysCells, err := utils.LoadSystemCells(*wallet.Client)
+	if err != nil {
+		return nil, err
+	}
+	output := ckbtypes.Output{
+		Capacity: types.HexUint64(capacity).Hex(),
+		Lock:     *wallet.Lock(),
+		Type: &ckbtypes.Script{
+			Args:     types.HexStrPrefix,
+			CodeHash: sysCells.DaoTypeHash.Hex(),
+			HashType: ckbtypes.HashTypeType,
+		},
+	}
+	outputByteSize, err := output.ByteSize()
+	if err != nil {
+		return nil, err
+	}
+	changeOutput := ckbtypes.Output{
+		Lock: *wallet.Lock(),
+	}
+	changeOutputByteSize, err := changeOutput.ByteSize()
+	if err != nil {
+		return nil, err
+	}
+	minCap := outputByteSize * types.OneCKBShannon
+	minChangeCap := changeOutputByteSize * types.OneCKBShannon
+	inputs, inputsCap, err := wallet.GatherInputs(ctx, capacity, minCap, minChangeCap, fee)
+	outputs := []ckbtypes.Output{output}
+	outputsData := []string{types.HexStrPrefix}
+	changeOutputCap := inputsCap - (capacity + fee)
+	if changeOutputCap > 0 {
+		changeOutput.Capacity = types.HexUint64(changeOutputCap).Hex()
+		outputs = append(outputs, changeOutput)
+		outputsData = append(outputsData, types.HexStrPrefix)
+	}
+	tx := ckbtypes.Transaction{
+		Version: types.HexUint64(0).Hex(),
+		CellDeps: []ckbtypes.CellDep{
+			{OutPoint: *sysCells.Secp256k1GroupOutPoint, DepType: ckbtypes.DepTypeDepGroup},
+			{OutPoint: *sysCells.DaoOutPoint, DepType: ckbtypes.DepTypeCode},
+		},
+		Inputs:      inputs,
+		Outputs:     outputs,
+		OutputsData: outputsData,
+		Witnesses:   utils.EmptyWitnessesByLen(len(inputs)),
+	}
+	if err := utils.SignTransaction(*wallet.Key, &tx); err != nil {
+		return nil, err
+	}
+	txHash, err := wallet.SendTransaction(ctx, tx)
+	if err != nil {
+		return nil, err
+	}
+	return &ckbtypes.OutPoint{
+		TxHash: txHash,
+		Index:  types.HexUint64(0).Hex(),
+	}, nil
 }
 
 func (wallet *Wallet) GenerateWithdrawFromDAOTransaction(ctx context.Context, point ckbtypes.OutPoint, fee uint64) (*ckbtypes.Transaction, error) {

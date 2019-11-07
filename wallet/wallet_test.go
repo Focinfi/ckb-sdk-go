@@ -66,6 +66,6 @@ func TestWallet_SendCapacity(t *testing.T) {
 
 func balanceOfBarAndFoo() (uint64, uint64) {
 	barBalance, _ := bar.Balance(context.Background())
-	fooBalance, _ := bar.Balance(context.Background())
+	fooBalance, _ := foo.Balance(context.Background())
 	return barBalance, fooBalance
 }
