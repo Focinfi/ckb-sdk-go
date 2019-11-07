@@ -44,10 +44,10 @@ func RawHTTPPost(ctx context.Context, url string, method string, params interfac
 	}
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(b))
-	req = req.WithContext(ctx)
 	if err != nil {
 		return nil, errtypes.WrapErr(errtypes.RPCErrNewRequestFail, err)
 	}
+	req = req.WithContext(ctx)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := (&http.Client{}).Do(req)
