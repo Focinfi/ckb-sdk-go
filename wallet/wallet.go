@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/Focinfi/ckb-sdk-go/address"
-
 	"github.com/Focinfi/ckb-sdk-go/cellcollector"
 	"github.com/Focinfi/ckb-sdk-go/key"
 	"github.com/Focinfi/ckb-sdk-go/rpc"
@@ -36,11 +35,11 @@ func NewWallet(client *rpc.Client, key *key.Key, skipDataAndType bool) (*Wallet,
 }
 
 func NewWalletByPrivKey(client *rpc.Client, privKey string, skipDataAndType bool, mode types.Mode) (*Wallet, error) {
-	key, err := key.NewFromPrivKeyHex(privKey, mode)
+	k, err := key.NewFromPrivKeyHex(privKey, mode)
 	if err != nil {
 		return nil, err
 	}
-	return NewWallet(client, key, skipDataAndType)
+	return NewWallet(client, k, skipDataAndType)
 }
 
 func (wallet *Wallet) Balance(ctx context.Context) (uint64, error) {
@@ -139,8 +138,8 @@ func (wallet *Wallet) GenerateWithdrawFromDAOTransaction(ctx context.Context, po
 	return nil, nil
 }
 
-func (wallet *Wallet) GetTransaction(ctx context.Context, hash string) (*ckbtypes.Transaction, error) {
-	return nil, nil
+func (wallet *Wallet) GetTransaction(ctx context.Context, hash string) (*ckbtypes.TransactionInfo, error) {
+	return wallet.Client.GetTransaction(ctx, hash)
 }
 
 func (wallet *Wallet) BlockAssemblerConfig() string {

@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/Focinfi/ckb-sdk-go/types"
 
 	"github.com/Focinfi/ckb-sdk-go/rpc"
@@ -16,48 +18,54 @@ var (
 	fooPubKeyHex   = "0x039166c289b9f905e55f9e3df9f69d7f356b4a22095f894f4715714aa4b56606af"
 )
 
+var (
+	testCli = rpc.NewClient(rpc.DefaultURL)
+	bar, _  = NewWalletByPrivKey(testCli, testPrivKeyHex, true, types.ModeTestNet)
+	foo, _  = NewWalletByPrivKey(testCli, fooPrivKeyHex, true, types.ModeTestNet)
+)
+
 func TestNewWallet(t *testing.T) {
-	client := rpc.NewClient(rpc.DefaultURL)
-	minner, err := NewWalletByPrivKey(client, testPrivKeyHex, true, types.ModeTestNet)
+	w, err := NewWalletByPrivKey(testCli, testPrivKeyHex, true, types.ModeTestNet)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("minner:", minner)
-	foo, err := NewWalletByPrivKey(client, fooPrivKeyHex, true, types.ModeTestNet)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NotNil(t, w)
+	assert.NotNil(t, w.Key)
+	assert.NotNil(t, w.Client)
+	assert.NotNil(t, w.lockHashHex)
+}
 
-	balance, err := minner.Balance(context.Background())
+func TestWallet_Balance(t *testing.T) {
+	_, err := bar.Balance(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("miner balance:", balance)
-	fooBalance, err := foo.Balance(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log("foo balance:", fooBalance)
+}
 
-	unspentCells, err := minner.GetUnspentCells(context.Background(), 0)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log("unspentCells:", unspentCells)
-
+func TestWallet_SendCapacity(t *testing.T) {
 	fooAddr, err := foo.Key.Address.Generate()
 	if err != nil {
 		t.Fatal(err)
 	}
-	tx, err := minner.GenerateTx(context.Background(), fooAddr, 1000*types.OneCKBShannon, nil, types.OneCKBShannon, true)
+	data := []byte("123abc123abc")
+	dataHex := types.NewHexStr(data).Hex()
+	txHash, err := bar.SendCapacity(context.Background(), fooAddr, 200*types.OneCKBShannon, data, types.OneCKBShannon)
 	if err != nil {
 		t.Fatal(err)
+	} else {
+		t.Log("transaction hash:", txHash)
+		barBalance, fooBalance := balanceOfBarAndFoo()
+		t.Logf("balance: bar=%d, foo=%d", barBalance, fooBalance)
+		txInfo, err := bar.GetTransaction(context.Background(), txHash)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, dataHex, txInfo.Transaction.OutputsData[0])
 	}
-	t.Log("tx:", tx)
+}
 
-	txHash, err := minner.SendCapacity(context.Background(), fooAddr, 1000*types.OneCKBShannon, nil, types.OneCKBShannon)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log("transaction hash:", txHash)
+func balanceOfBarAndFoo() (uint64, uint64) {
+	barBalance, _ := bar.Balance(context.Background())
+	fooBalance, _ := bar.Balance(context.Background())
+	return barBalance, fooBalance
 }
