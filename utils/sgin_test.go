@@ -4,48 +4,35 @@ import (
 	"testing"
 
 	"github.com/Focinfi/ckb-sdk-go/types"
-	"github.com/Focinfi/ckb-sdk-go/types/ckbtypes"
+
 	"github.com/stretchr/testify/assert"
+
+	"github.com/Focinfi/ckb-sdk-go/key"
+	"github.com/Focinfi/ckb-sdk-go/types/ckbtypes"
 )
 
-func TestNewLockScript(t *testing.T) {
-	testPubKey := "0x03579b698bde7d204bdbf845704d0912a56589f61f43d6143d770945c6af350d4e"
-	script, err := NewLockScript(testPubKey)
+func TestSignTransaction(t *testing.T) {
+	testPrivKeyHex := "0x3f86634c419dd7f266793c9fda9fb4ccbe121ce395ed14e699a741a4dabf0177"
+	k, err := key.NewFromPrivKeyHex(testPrivKeyHex, types.ModeTestNet)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedScript := &ckbtypes.Script{
-		CodeHash: types.BlockAssemblerCodeHash,
-		HashType: ckbtypes.HashTypeType,
-		Args:     "0xe2fae171d25c36777168caa72dd448677785aa9d",
-	}
-	assert.Equal(t, expectedScript, script)
-}
 
-func TestLockScriptHash(t *testing.T) {
-	testPubKey := "0x03579b698bde7d204bdbf845704d0912a56589f61f43d6143d770945c6af350d4e"
-	hexStr, err := LockScriptHash(testPubKey)
-	if err != nil {
-		t.Fatal(err)
-	}
-	expectedHex := "0x920711df9f85b8cc6638e7fb325c3bee6a19f648d0d74a868feb879d115fe992"
-	assert.Equal(t, expectedHex, hexStr.Hex())
-}
-
-func TestRawTransactionHash(t *testing.T) {
 	type args struct {
-		transaction ckbtypes.Transaction
+		key         key.Key
+		transaction *ckbtypes.Transaction
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantHex string
-		wantErr bool
+		name        string
+		args        args
+		wantWitness []string
+		wantErr     bool
 	}{
 		{
 			name: "normal",
 			args: args{
-				transaction: ckbtypes.Transaction{
+				key: *k,
+				transaction: &ckbtypes.Transaction{
 					CellDeps: []ckbtypes.CellDep{
 						{
 							DepType: ckbtypes.DepTypeDepGroup,
@@ -83,24 +70,22 @@ func TestRawTransactionHash(t *testing.T) {
 							},
 						},
 					},
-					Witnesses:   EmptyWitnessesByLen(2),
+					Witnesses:   EmptyWitnessesByLen(1),
 					OutputsData: []string{"0x", "0x"},
 					Version:     "0x0",
 				},
 			},
-			wantHex: "0xd54cc789afb3b7153ce9032a9227341011f1287b802fc56d8b0f428b66a3c503",
-			wantErr: false,
+			wantWitness: []string{"0x739942d6b2214a549ddcb23f135df85cf3f1b4297f1c27e0ceaa56bee88683a51de83016a61f65d8ea9bafa822d5a6f7b86db5d460693acc846a8dbf525a708301"},
+			wantErr:     false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := RawTransactionHash(tt.args.transaction)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("RawTransactionHash() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if err := SignTransaction(tt.args.key, tt.args.transaction); (err != nil) != tt.wantErr {
+				t.Errorf("SignTransaction() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr {
-				assert.Equal(t, tt.wantHex, got.Hex())
+				assert.Equal(t, tt.wantWitness, tt.args.transaction.Witnesses)
 			}
 		})
 	}

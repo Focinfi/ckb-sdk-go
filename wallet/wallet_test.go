@@ -18,20 +18,28 @@ var (
 
 func TestNewWallet(t *testing.T) {
 	client := rpc.NewClient(rpc.DefaultURL)
-	wallet, err := NewWalletByPrivKey(client, testPrivKeyHex, true, types.ModeTestNet)
+	minner, err := NewWalletByPrivKey(client, testPrivKeyHex, true, types.ModeTestNet)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("wallet:", wallet)
+	t.Log("minner:", minner)
 	foo, err := NewWalletByPrivKey(client, fooPrivKeyHex, true, types.ModeTestNet)
-
-	balance, err := wallet.Balance(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("balance:", balance)
 
-	unspentCells, err := wallet.GetUnspentCells(context.Background(), 0)
+	balance, err := minner.Balance(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("miner balance:", balance)
+	fooBalance, err := foo.Balance(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("foo balance:", fooBalance)
+
+	unspentCells, err := minner.GetUnspentCells(context.Background(), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,9 +49,15 @@ func TestNewWallet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tx, err := wallet.GenerateTx(context.Background(), fooAddr, 1000*types.OneCKBShannon, nil, types.OneCKBShannon, true)
+	tx, err := minner.GenerateTx(context.Background(), fooAddr, 1000*types.OneCKBShannon, nil, types.OneCKBShannon, true)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log("tx:", tx)
+
+	txHash, err := minner.SendCapacity(context.Background(), fooAddr, 1000*types.OneCKBShannon, nil, types.OneCKBShannon)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("transaction hash:", txHash)
 }

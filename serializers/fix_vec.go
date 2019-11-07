@@ -73,7 +73,7 @@ func NewByte32FixVec(items []Byte32) *ByteFixVec {
 	}
 	return &ByteFixVec{
 		fixVec: &FixVec{
-			ItemLen:  Uint32(len(data)),
+			ItemLen:  Uint32(len(items)),
 			ItemSize: 32,
 			data:     data,
 		},
@@ -83,11 +83,11 @@ func NewByte32FixVec(items []Byte32) *ByteFixVec {
 func NewByte32FixVecByHexes(hexes []string) (*ByteFixVec, error) {
 	items := make([]Byte32, 0, len(hexes))
 	for _, hex := range hexes {
-		hexStr, err := types.ParseHexStr(hex)
+		byte32, err := NewByte32(hex)
 		if err != nil {
 			return nil, err
 		}
-		items = append(items, hexStr.Bytes())
+		items = append(items, byte32)
 	}
 	return NewByte32FixVec(items), nil
 }

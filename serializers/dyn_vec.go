@@ -1,5 +1,7 @@
 package serializers
 
+import "github.com/Focinfi/ckb-sdk-go/types"
+
 type DynVec struct {
 	FullLen Uint32
 	Offsets []Uint32
@@ -44,6 +46,18 @@ func NewDynVec(fields []Serializer) *DynVec {
 		data:    data,
 	}
 	return table
+}
+
+func NewHexDynVec(hexes []string) (*DynVec, error) {
+	items := make([]Serializer, 0, len(hexes))
+	for _, hex := range hexes {
+		hexStr, err := types.ParseHexStr(hex)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, NewByteFixVec(hexStr.Bytes()))
+	}
+	return NewDynVec(items), nil
 }
 
 // ByteDynVec dyn serializers [fix serializers]

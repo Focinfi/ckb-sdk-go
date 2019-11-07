@@ -12,7 +12,7 @@ func SignTransaction(key key.Key, transaction *ckbtypes.Transaction) error {
 	if transaction == nil {
 		return nil
 	}
-	txHash, err := TransactionHash(*transaction)
+	txHash, err := RawTransactionHash(*transaction)
 	if err != nil {
 		return err
 	}

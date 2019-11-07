@@ -25,7 +25,6 @@ type (
 	OutPointIndex  = Uint32
 	Arg            = ByteFixVec
 	OutputData     = ByteFixVec
-	Witness        = ByteFixVec
 	Version        = Uint32
 )
 

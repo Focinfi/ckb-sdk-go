@@ -40,8 +40,8 @@ func LockScriptHash(pubKey string) (*types.HexStr, error) {
 	return ScriptHash(*script)
 }
 
-func TransactionHash(transaction ckbtypes.Transaction) (*types.HexStr, error) {
-	slr, err := serializers.NewTransaction(transaction)
+func RawTransactionHash(transaction ckbtypes.Transaction) (*types.HexStr, error) {
+	slr, err := serializers.NewRawTransaction(transaction)
 	if err != nil {
 		return nil, err
 	}

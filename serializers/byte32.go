@@ -10,7 +10,10 @@ import (
 type Byte32 []byte
 
 func (b Byte32) Serialize() []byte {
-	return b[:32]
+	if len(b) >= 32 {
+		return b[:32]
+	}
+	return nil
 }
 
 func NewByte32(hex string) (Byte32, error) {

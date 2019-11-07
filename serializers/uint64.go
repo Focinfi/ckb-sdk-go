@@ -6,7 +6,7 @@ type Uint64 uint64
 
 // Serialize serializes in little endian
 func (h Uint64) Serialize() []byte {
-	return types.HexUint64(uint64(h)).BigEndianBytes(8)
+	return types.HexUint64(uint64(h)).LittleEndianBytes(8)
 }
 
 func NewUint64ByHex(hexStr string) (Uint64, error) {

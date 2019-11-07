@@ -2,7 +2,6 @@ package wallet
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Focinfi/ckb-sdk-go/address"
 
@@ -98,10 +97,10 @@ func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacit
 		outputs = append(outputs, changeOutput)
 		outputsData = append(outputsData, types.HexStrPrefix)
 	}
-	fmt.Println("outputsData:", outputsData)
 	tx := &ckbtypes.Transaction{
 		Version:     types.HexUint64(0).Hex(),
 		CellDeps:    []ckbtypes.CellDep{},
+		HeaderDeps:  []string{},
 		Inputs:      inputs,
 		Outputs:     outputs,
 		OutputsData: outputsData,
@@ -124,7 +123,12 @@ func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacit
 	return tx, nil
 }
 
-func (wallet *Wallet) SendCapacity(ctx context.Context, targetAddr string, capacity uint64, data []byte, fee uint64) {
+func (wallet *Wallet) SendCapacity(ctx context.Context, targetAddr string, capacity uint64, data []byte, fee uint64) (string, error) {
+	tx, err := wallet.GenerateTx(ctx, targetAddr, capacity, data, fee, true)
+	if err != nil {
+		return "", nil
+	}
+	return wallet.SendTransaction(ctx, *tx)
 }
 
 func (wallet *Wallet) DepositToDAO(ctx context.Context, capacity, fee uint64) (*ckbtypes.OutPoint, error) {
@@ -148,7 +152,7 @@ func (wallet *Wallet) BlockAssemblerConfig() string {
 }
 
 func (wallet *Wallet) SendTransaction(ctx context.Context, transaction ckbtypes.Transaction) (string, error) {
-	return "", nil
+	return wallet.Client.SendTransaction(ctx, transaction.ToRaw())
 }
 
 func (wallet *Wallet) GatherInputs(ctx context.Context, capacity, minCap, minChangeCap, fee uint64) ([]ckbtypes.Input, uint64, error) {

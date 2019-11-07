@@ -39,7 +39,7 @@ func NewRawTransaction(transaction ckbtypes.Transaction) (*RawTransaction, error
 	if err != nil {
 		return nil, errtypes.WrapErr(errtypes.SerializationErrInvalidHeaderDep, err)
 	}
-	output, err := NewOutputDynVec(transaction.Outputs)
+	output, err := NewOutputsDynVec(transaction.Outputs)
 	if err != nil {
 		return nil, errtypes.WrapErr(errtypes.SerializationErrInvalidOutput, err)
 	}

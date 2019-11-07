@@ -210,7 +210,7 @@ func (client *Client) GetTransaction(ctx context.Context, txHash string) (*ckbty
 	return &transactionInfo, nil
 }
 
-func (client *Client) SendTransaction(ctx context.Context, transaction ckbtypes.Transaction) (string, error) {
+func (client *Client) SendTransaction(ctx context.Context, transaction ckbtypes.RawTransaction) (string, error) {
 	params := []interface{}{transaction}
 	result, err := RawHTTPPost(ctx, client.URL, "send_transaction", params)
 	if err != nil {

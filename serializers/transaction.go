@@ -7,7 +7,7 @@ import (
 
 type Transaction struct {
 	RawTransaction RawTransaction
-	Witness        ByteDynVec
+	Witnesses      Witnesses
 	serializer     *Table
 }
 
@@ -23,14 +23,14 @@ func NewTransaction(transaction ckbtypes.Transaction) (*Transaction, error) {
 	if err != nil {
 		return nil, err
 	}
-	witness, err := NewByteDynVecByHexes(transaction.Witnesses)
+	witnesses, err := NewWitnessesByHexes(transaction.Witnesses)
 	if err != nil {
 		return nil, errtypes.WrapErr(errtypes.SerializationErrInvalidWitness, err)
 	}
-	seriealizer := NewTable([]Serializer{rawTrans, witness})
+	serializer := NewTable([]Serializer{rawTrans, witnesses})
 	return &Transaction{
 		RawTransaction: *rawTrans,
-		Witness:        *witness,
-		serializer:     seriealizer,
+		Witnesses:      *witnesses,
+		serializer:     serializer,
 	}, nil
 }

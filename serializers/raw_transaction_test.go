@@ -1,4 +1,4 @@
-package utils
+package serializers
 
 import (
 	"testing"
@@ -8,31 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewLockScript(t *testing.T) {
-	testPubKey := "0x03579b698bde7d204bdbf845704d0912a56589f61f43d6143d770945c6af350d4e"
-	script, err := NewLockScript(testPubKey)
-	if err != nil {
-		t.Fatal(err)
-	}
-	expectedScript := &ckbtypes.Script{
-		CodeHash: types.BlockAssemblerCodeHash,
-		HashType: ckbtypes.HashTypeType,
-		Args:     "0xe2fae171d25c36777168caa72dd448677785aa9d",
-	}
-	assert.Equal(t, expectedScript, script)
-}
-
-func TestLockScriptHash(t *testing.T) {
-	testPubKey := "0x03579b698bde7d204bdbf845704d0912a56589f61f43d6143d770945c6af350d4e"
-	hexStr, err := LockScriptHash(testPubKey)
-	if err != nil {
-		t.Fatal(err)
-	}
-	expectedHex := "0x920711df9f85b8cc6638e7fb325c3bee6a19f648d0d74a868feb879d115fe992"
-	assert.Equal(t, expectedHex, hexStr.Hex())
-}
-
-func TestRawTransactionHash(t *testing.T) {
+func TestNewRawTransaction(t *testing.T) {
 	type args struct {
 		transaction ckbtypes.Transaction
 	}
@@ -83,24 +59,24 @@ func TestRawTransactionHash(t *testing.T) {
 							},
 						},
 					},
-					Witnesses:   EmptyWitnessesByLen(2),
 					OutputsData: []string{"0x", "0x"},
 					Version:     "0x0",
 				},
 			},
-			wantHex: "0xd54cc789afb3b7153ce9032a9227341011f1287b802fc56d8b0f428b66a3c503",
+			wantHex: "0x5f0100001c00000020000000490000004d0000007d0000004b0100000000000001000000b815a396c5226009670e89ee514850dcde452bca746cdd6b41c104b50e559c7000000000010000000001000000000000000000000095202d82c38ad9544f09df04b4e5a161038248376f4143fb2856ad2d59b11a6800000000ce0000000c0000006d00000061000000100000001800000061000000008a03b404000000490000001000000030000000310000009bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce80114000000ddbd7f09eb480450c1b1ed2c8696248de91c680261000000100000001800000061000000df1b47b72a000000490000001000000030000000310000009bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce80114000000e2fae171d25c36777168caa72dd448677785aa9d140000000c000000100000000000000000000000",
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := RawTransactionHash(tt.args.transaction)
+			got, err := NewRawTransaction(tt.args.transaction)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("RawTransactionHash() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("NewRawTransaction() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !tt.wantErr {
-				assert.Equal(t, tt.wantHex, got.Hex())
+				gotHex := types.NewHexStr(got.Serialize()).Hex()
+				assert.Equal(t, tt.wantHex, gotHex)
 			}
 		})
 	}

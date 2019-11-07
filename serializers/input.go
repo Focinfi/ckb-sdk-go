@@ -31,8 +31,8 @@ func NewInput(input ckbtypes.Input) (*Input, error) {
 		PreviousOutput: *prvOutput,
 		Since:          since,
 		serializer: &Struct{
-			*prvOutput,
 			since,
+			*prvOutput,
 		},
 	}, nil
 }
