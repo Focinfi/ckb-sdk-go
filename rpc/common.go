@@ -42,7 +42,6 @@ func RawHTTPPost(ctx context.Context, url string, method string, params interfac
 	if err != nil {
 		return nil, errtypes.WrapErr(errtypes.RPCErrMarshalRequestBodyFail, err)
 	}
-	fmt.Println(string(b))
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(b))
 	req = req.WithContext(ctx)

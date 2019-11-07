@@ -46,7 +46,6 @@ func (collector *CellCollector) GetUnspentCells(ctx context.Context, lockHash st
 			return nil, 0, err
 		}
 
-		fmt.Println("cells len:", len(cells))
 		for _, cell := range cells {
 			if collector.SkipDataAndType {
 				liveCell, err := collector.Cli.GetLiveCell(ctx, cell.OutPoint, true)
