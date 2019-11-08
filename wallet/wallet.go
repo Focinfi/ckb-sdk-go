@@ -104,7 +104,7 @@ func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacit
 		Inputs:      inputs,
 		Outputs:     outputs,
 		OutputsData: outputsData,
-		Witnesses:   utils.EmptyWitnessesByLen(len(inputs)),
+		Witnesses:   []interface{}{ckbtypes.Witness{}},
 	}
 
 	sysCells, err := utils.LoadSystemCells(*wallet.Client)
@@ -117,10 +117,8 @@ func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacit
 		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeCode, OutPoint: *sysCells.Secp256k1CodeOutPoint})
 		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeCode, OutPoint: *sysCells.Secp256k1CodeOutPoint})
 	}
-	if err := utils.SignTransaction(*wallet.Key, tx); err != nil {
-		return nil, err
-	}
-	return tx, nil
+
+	return utils.SignTransaction(*wallet.Key, *tx)
 }
 
 func (wallet *Wallet) SendCapacity(ctx context.Context, targetAddr string, capacity uint64, data []byte, fee uint64) (string, error) {
@@ -176,12 +174,13 @@ func (wallet *Wallet) DepositToDAO(ctx context.Context, capacity, fee uint64) (*
 		Inputs:      inputs,
 		Outputs:     outputs,
 		OutputsData: outputsData,
-		Witnesses:   utils.EmptyWitnessesByLen(len(inputs)),
+		Witnesses:   []interface{}{ckbtypes.Witness{}},
 	}
-	if err := utils.SignTransaction(*wallet.Key, &tx); err != nil {
+	signedTx, err := utils.SignTransaction(*wallet.Key, tx)
+	if err != nil {
 		return nil, err
 	}
-	txHash, err := wallet.SendTransaction(ctx, tx)
+	txHash, err := wallet.SendTransaction(ctx, *signedTx)
 	if err != nil {
 		return nil, err
 	}

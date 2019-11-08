@@ -79,6 +79,9 @@ const (
 const (
 	GenTransErrGetOutputLockByteSizeFail ErrType = "gen-trans-get-output-lock-byte-size-error"
 	GenTransErrGetOutputTypeByteSizeFail ErrType = "gen-trans-get-output-type-byte-size-error"
+	GenTransErrWitnessNotEnough          ErrType = "gen-trans-witness-not-enough-error"
+	GenTransErrFirstWitnessTypeWrong     ErrType = "gen-trans-first-witness-format-wrong-error"
+	GenTransErrHexWitnessTypeWrong       ErrType = "gen-trans-hex-witness-type-wrong-error"
 	GenTransErrWitnessNumLessThanInputs  ErrType = "gen-trans-witness-num-not-math-inputs-error"
 	GenTransErrSignFail                  ErrType = "gen-trans-sign-fail-error"
 )

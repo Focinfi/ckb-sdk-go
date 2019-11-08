@@ -83,7 +83,7 @@ func TestRawTransactionHash(t *testing.T) {
 							},
 						},
 					},
-					Witnesses:   EmptyWitnessesByLen(2),
+					Witnesses:   []interface{}{},
 					OutputsData: []string{"0x", "0x"},
 					Version:     "0x0",
 				},

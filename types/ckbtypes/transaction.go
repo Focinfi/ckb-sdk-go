@@ -1,14 +1,14 @@
 package ckbtypes
 
 type Transaction struct {
-	CellDeps    []CellDep `json:"cell_deps"`
-	Hash        string    `json:"hash"`
-	HeaderDeps  []string  `json:"header_deps"`
-	Inputs      []Input   `json:"inputs"`
-	Outputs     []Output  `json:"outputs"`
-	OutputsData []string  `json:"outputs_data"`
-	Version     string    `json:"version"`
-	Witnesses   []string  `json:"witnesses"`
+	CellDeps    []CellDep     `json:"cell_deps"`
+	Hash        string        `json:"hash"`
+	HeaderDeps  []string      `json:"header_deps"`
+	Inputs      []Input       `json:"inputs"`
+	Outputs     []Output      `json:"outputs"`
+	OutputsData []string      `json:"outputs_data"`
+	Version     string        `json:"version"`
+	Witnesses   []interface{} `json:"witnesses"`
 }
 
 func (transaction Transaction) ToRaw() RawTransaction {
@@ -24,11 +24,11 @@ func (transaction Transaction) ToRaw() RawTransaction {
 }
 
 type RawTransaction struct {
-	CellDeps    []CellDep `json:"cell_deps"`
-	HeaderDeps  []string  `json:"header_deps"`
-	Inputs      []Input   `json:"inputs"`
-	Outputs     []Output  `json:"outputs"`
-	OutputsData []string  `json:"outputs_data"`
-	Version     string    `json:"version"`
-	Witnesses   []string  `json:"witnesses"`
+	CellDeps    []CellDep     `json:"cell_deps"`
+	HeaderDeps  []string      `json:"header_deps"`
+	Inputs      []Input       `json:"inputs"`
+	Outputs     []Output      `json:"outputs"`
+	OutputsData []string      `json:"outputs_data"`
+	Version     string        `json:"version"`
+	Witnesses   []interface{} `json:"witnesses"`
 }

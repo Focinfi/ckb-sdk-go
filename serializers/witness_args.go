@@ -44,3 +44,16 @@ func NewWitnessArgs(witness ckbtypes.Witness) (*WitnessArgs, error) {
 		serializer:             serializer,
 	}, nil
 }
+
+func NewWitnessArgsDynVec(witnesses []ckbtypes.Witness) (*DynVec, error) {
+	serializers := make([]Serializer, 0, len(witnesses))
+	for _, witness := range witnesses {
+
+		witnessArgs, err := NewWitnessArgs(witness)
+		if err != nil {
+			return nil, err
+		}
+		serializers = append(serializers, witnessArgs)
+	}
+	return NewDynVec(serializers), nil
+}

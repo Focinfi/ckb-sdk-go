@@ -20,19 +20,19 @@ func TestSignTransaction(t *testing.T) {
 
 	type args struct {
 		key         key.Key
-		transaction *ckbtypes.Transaction
+		transaction ckbtypes.Transaction
 	}
 	tests := []struct {
 		name        string
 		args        args
-		wantWitness []string
+		wantWitness []interface{}
 		wantErr     bool
 	}{
 		{
 			name: "normal",
 			args: args{
 				key: *k,
-				transaction: &ckbtypes.Transaction{
+				transaction: ckbtypes.Transaction{
 					CellDeps: []ckbtypes.CellDep{
 						{
 							DepType: ckbtypes.DepTypeDepGroup,
@@ -70,22 +70,23 @@ func TestSignTransaction(t *testing.T) {
 							},
 						},
 					},
-					Witnesses:   EmptyWitnessesByLen(1),
+					Witnesses:   []interface{}{ckbtypes.Witness{}},
 					OutputsData: []string{"0x", "0x"},
 					Version:     "0x0",
 				},
 			},
-			wantWitness: []string{"0x739942d6b2214a549ddcb23f135df85cf3f1b4297f1c27e0ceaa56bee88683a51de83016a61f65d8ea9bafa822d5a6f7b86db5d460693acc846a8dbf525a708301"},
+			wantWitness: []interface{}{"0x55000000100000005500000055000000410000007d0c4c2799f2a617aa072a0139e37989b5ab412de243569afe50f0fb1579d1491c40514bab3ff1cfa386c0837dcdd70aca66764ac090607ac7dbb02b9b8f36f800"},
 			wantErr:     false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := SignTransaction(tt.args.key, tt.args.transaction); (err != nil) != tt.wantErr {
+			tx, err := SignTransaction(tt.args.key, tt.args.transaction)
+			if (err != nil) != tt.wantErr {
 				t.Errorf("SignTransaction() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr {
-				assert.Equal(t, tt.wantWitness, tt.args.transaction.Witnesses)
+				assert.Equal(t, tt.wantWitness, tx.Witnesses)
 			}
 		})
 	}
