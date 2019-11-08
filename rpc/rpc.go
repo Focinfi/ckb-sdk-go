@@ -224,3 +224,18 @@ func (client *Client) SendTransaction(ctx context.Context, transaction ckbtypes.
 
 	return txHash, nil
 }
+
+func (client *Client) CalculateDAOMaximumWithdraw(ctx context.Context, outpoint ckbtypes.OutPoint, withdrawBlockHash string) (uint64, error) {
+	params := []interface{}{outpoint, withdrawBlockHash}
+	result, err := RawHTTPPost(ctx, client.URL, "calculate_dao_maximum_withdraw", params)
+	if err != nil {
+		return 0, err
+	}
+
+	var hexUint64 types.HexUint64
+	if err := json.Unmarshal(result, &hexUint64); err != nil {
+		return 0, errtypes.WrapErr(errtypes.RPCErrResponseDataBroken, err)
+	}
+
+	return hexUint64.Uint64(), nil
+}

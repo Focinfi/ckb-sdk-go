@@ -82,8 +82,13 @@ const (
 	GenTransErrWitnessNotEnough          ErrType = "gen-trans-witness-not-enough-error"
 	GenTransErrFirstWitnessTypeWrong     ErrType = "gen-trans-first-witness-format-wrong-error"
 	GenTransErrHexWitnessTypeWrong       ErrType = "gen-trans-hex-witness-type-wrong-error"
-	GenTransErrWitnessNumLessThanInputs  ErrType = "gen-trans-witness-num-not-math-inputs-error"
 	GenTransErrSignFail                  ErrType = "gen-trans-sign-fail-error"
+)
+
+// dao error
+const (
+	DAOWithdrawErrDepositCellNotLive    ErrType = "dao-withdraw-deposit-cell-not-live-error"
+	DAOWithdrawErrDepositTxNotCommitted ErrType = "dao-withdraw-deposit-cell-tx-not-committed-error"
 )
 
 type Error struct {

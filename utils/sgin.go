@@ -19,7 +19,7 @@ func SignTransaction(key key.Key, transaction ckbtypes.Transaction) (*ckbtypes.T
 	}
 	firstWitness, ok := transaction.Witnesses[0].(ckbtypes.Witness)
 	if !ok {
-		return nil, errtypes.WrapErr(errtypes.GenTransErrFirstWitnessTypeWrong, errors.New("first witness must be a ckbtypes.Witness"))
+		return nil, errtypes.WrapErr(errtypes.GenTransErrFirstWitnessTypeWrong, errors.New("first witnesses must be a ckbtypes.Witness"))
 	}
 	txHash, err := RawTransactionHash(transaction)
 	if err != nil {
@@ -77,9 +77,9 @@ func SignTransaction(key key.Key, transaction ckbtypes.Transaction) (*ckbtypes.T
 	}
 	emptiedWitnessHex := types.NewHexStr(emptiedWitnessSerializer.Serialize()).Hex()
 
-	witness := []interface{}{emptiedWitnessHex}
+	witnesses := []interface{}{emptiedWitnessHex}
 	if len(transaction.Witnesses) > 1 {
-		witness = append(witness, transaction.Witnesses...)
+		witnesses = append(witnesses, transaction.Witnesses...)
 	}
 	return &ckbtypes.Transaction{
 		Hash:        txHash.Hex(),
@@ -89,6 +89,6 @@ func SignTransaction(key key.Key, transaction ckbtypes.Transaction) (*ckbtypes.T
 		Inputs:      transaction.Inputs,
 		Outputs:     transaction.Outputs,
 		OutputsData: transaction.OutputsData,
-		Witnesses:   witness,
+		Witnesses:   witnesses,
 	}, nil
 }

@@ -64,6 +64,14 @@ func TestWallet_SendCapacity(t *testing.T) {
 	}
 }
 
+func TestWallet_DepositToDAO(t *testing.T) {
+	outPoint, err := bar.DepositToDAO(context.Background(), 1000*types.OneCKBShannon, types.OneCKBShannon)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("deposit out point:", outPoint)
+}
+
 func balanceOfBarAndFoo() (uint64, uint64) {
 	barBalance, _ := bar.Balance(context.Background())
 	fooBalance, _ := foo.Balance(context.Background())
