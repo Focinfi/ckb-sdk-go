@@ -6,7 +6,14 @@ import (
 	"github.com/Focinfi/ckb-sdk-go/types/errtypes"
 )
 
-func Parse(address string, mode types.Mode) ([]string, error) {
+type AddrConfig struct {
+	FormatType    addrtypes.FormatType
+	CodeHashIndex addrtypes.CodeHashIndex
+	CodeHash      *types.HexStr
+	Args          *types.HexStr
+}
+
+func Parse(address string, mode types.Mode) (*AddrConfig, error) {
 	prefix, payload, err := decodeAddress(address)
 	if err != nil {
 		return nil, err
@@ -32,7 +39,7 @@ func Parse(address string, mode types.Mode) ([]string, error) {
 // ParseShortPayloadAddress
 // address = ckt/ckb | 0x01 | code_hash_index | single_arg
 // return = [0x01, hex(code_hash_index), hex(single_arg)]
-func ParseShortPayloadAddress(address string, mode types.Mode) ([]string, error) {
+func ParseShortPayloadAddress(address string, mode types.Mode) (*AddrConfig, error) {
 	prefix, payload, err := decodeAddress(address)
 	if err != nil {
 		return nil, err
@@ -47,15 +54,15 @@ func ParseShortPayloadAddress(address string, mode types.Mode) ([]string, error)
 	return parseShortPayloadAddress(formatType, payload[1:])
 }
 
-func ParseShortPayloadAddressArg(address string, mode types.Mode) (string, error) {
-	args, err := ParseShortPayloadAddress(address, mode)
+func ParseShortPayloadAddressArg(address string, mode types.Mode) (*types.HexStr, error) {
+	config, err := ParseShortPayloadAddress(address, mode)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return args[2], nil
+	return config.Args, nil
 }
 
-func parseShortPayloadAddress(formatType addrtypes.FormatType, payload []byte) ([]string, error) {
+func parseShortPayloadAddress(formatType addrtypes.FormatType, payload []byte) (*AddrConfig, error) {
 	if formatType != addrtypes.FormatTypeShortLock {
 		return nil, errtypes.WrapErr(errtypes.AddressErrFormatTypeWrong, nil)
 	}
@@ -63,13 +70,17 @@ func parseShortPayloadAddress(formatType addrtypes.FormatType, payload []byte) (
 	if err != nil {
 		return nil, err
 	}
-	return []string{formatType.Hex(), hashInfo.HashType.Hex(), hashInfo.Data.Hex()}, nil
+	return &AddrConfig{
+		FormatType:    formatType,
+		CodeHashIndex: hashInfo.HashType,
+		Args:          hashInfo.Data,
+	}, nil
 }
 
 // ParseFullPayloadAddress
 // payload = ckt/ckb | 0x02/0x04(1bit) | code_hash(32bit) | args
 // return = ["0x2"/"0x4", hex(code_hash), hex(args)]
-func ParseFullPayloadAddress(address string, mode types.Mode) ([]string, error) {
+func ParseFullPayloadAddress(address string, mode types.Mode) (*AddrConfig, error) {
 	prefix, payload, err := decodeAddress(address)
 	if err != nil {
 		return nil, err
@@ -84,16 +95,16 @@ func ParseFullPayloadAddress(address string, mode types.Mode) ([]string, error) 
 	return parseFullPayloadAddress(formatType, payload[1:])
 }
 
-func parseFullPayloadAddress(formatType addrtypes.FormatType, payload []byte) ([]string, error) {
+func parseFullPayloadAddress(formatType addrtypes.FormatType, payload []byte) (*AddrConfig, error) {
 	if addrtypes.IsFullPayloadFormatType(formatType) {
 		return nil, errtypes.WrapErr(errtypes.AddressErrFormatTypeWrong, nil)
 	}
 	if len(payload) <= 32 {
 		return nil, errtypes.WrapErr(errtypes.AddressErrTooShort, nil)
 	}
-	return []string{
-		formatType.Hex(),
-		types.NewHexStr(payload[:32]).Hex(),
-		types.NewHexStr(payload[32:]).Hex(),
+	return &AddrConfig{
+		FormatType: formatType,
+		CodeHash:   types.NewHexStr(payload[:32]),
+		Args:       types.NewHexStr(payload[32:]),
 	}, nil
 }

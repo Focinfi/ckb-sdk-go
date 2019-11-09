@@ -38,6 +38,21 @@ func (addr *Address) Generate() (string, error) {
 	return encodeAddress(addr.Prefix, payload)
 }
 
+// Generates short payload format address
+// payload = type(01) | code hash index(01) | multisig
+// see https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0021-ckb-address-format/0021-ckb-address-format.md for more info.
+func (addr *Address) GenerateShortPayloadFormatAddress(hash160HexStr string) (string, error) {
+	hexStr, err := types.ParseHexStr(hash160HexStr)
+	if err != nil {
+		return "", err
+	}
+	payload := append([]byte{
+		byte(addrtypes.FormatTypeShortLock),
+		byte(addrtypes.CodeHashIndex1)},
+		hexStr.Bytes()...)
+	return encodeAddress(addr.Prefix, payload)
+}
+
 // GenerateFullPayloadAddress generates full payload format address
 // payload = 0x02/0x04 | code_hash | args
 // see https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0021-ckb-address-format/0021-ckb-address-format.md for more info.

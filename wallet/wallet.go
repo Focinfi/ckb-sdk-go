@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/Focinfi/ckb-sdk-go/types/addrtypes"
+
 	"github.com/Focinfi/ckb-sdk-go/types/errtypes"
 
 	"github.com/Focinfi/ckb-sdk-go/address"
@@ -65,16 +67,31 @@ func (wallet *Wallet) GetUnspentCells(ctx context.Context, needCap uint64) ([]ck
 }
 
 func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacity uint64, data []byte, fee uint64, useDepGroup bool) (*ckbtypes.Transaction, error) {
-	arg, err := address.ParseShortPayloadAddressArg(targetAddr, wallet.Key.Address.Mode)
+	sysCells, err := utils.LoadSystemCells(*wallet.Client)
 	if err != nil {
 		return nil, err
 	}
+
+	config, err := address.Parse(targetAddr, wallet.Key.Address.Mode)
+	var codeHash *types.HexStr
+	switch config.FormatType {
+	case addrtypes.FormatTypeShortLock:
+		switch config.CodeHashIndex {
+		case addrtypes.CodeHashIndex0:
+			codeHash = sysCells.Secp256k1CodeHash
+		case addrtypes.CodeHashIndex1:
+			codeHash = sysCells.MultiSignSecpCellTypeHash
+		}
+	case addrtypes.FormatTypeCode, addrtypes.FormatTypeData:
+		codeHash = config.CodeHash
+	}
+
 	dataHex := types.NewHexStr(data)
 	output := ckbtypes.Output{
 		Capacity: types.HexUint64(capacity).Hex(),
 		Lock: ckbtypes.Script{
-			Args:     arg,
-			CodeHash: types.BlockAssemblerCodeHash,
+			Args:     config.Args.Hex(),
+			CodeHash: codeHash.Hex(),
 			HashType: ckbtypes.HashTypeType,
 		},
 	}
@@ -110,15 +127,12 @@ func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacit
 		Witnesses:   []interface{}{ckbtypes.Witness{}},
 	}
 
-	sysCells, err := utils.LoadSystemCells(*wallet.Client)
-	if err != nil {
-		return nil, err
-	}
 	if useDepGroup {
 		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeDepGroup, OutPoint: *sysCells.Secp256k1GroupOutPoint})
+		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeDepGroup, OutPoint: *sysCells.MultiSignSecpGroupOutPoint})
 	} else {
 		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeCode, OutPoint: *sysCells.Secp256k1CodeOutPoint})
-		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeCode, OutPoint: *sysCells.Secp256k1CodeOutPoint})
+		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeCode, OutPoint: *sysCells.Secp256k1DataOutPoint})
 	}
 
 	return utils.SignTransaction(*wallet.Key, *tx)

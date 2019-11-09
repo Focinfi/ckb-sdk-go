@@ -19,10 +19,10 @@ func TestParseShortPayloadAddress(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedData := []string{
-		addrtypes.FormatTypeShortLock.Hex(),
-		addrtypes.CodeHashIndex0.Hex(),
-		addr.PubKey.Blake160.Hex(),
+	expectedData := AddrConfig{
+		FormatType:    addrtypes.FormatTypeShortLock,
+		CodeHashIndex: addrtypes.CodeHashIndex0,
+		Args:          addr.PubKey.Blake160,
 	}
 	assert.Equal(t, expectedData, data)
 }

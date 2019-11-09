@@ -21,23 +21,29 @@ type SysCells struct {
 	DaoOutPoint *ckbtypes.OutPoint
 	DaoCodeHash *types.HexStr
 	DaoTypeHash *types.HexStr
+
+	MultiSignSecpCellTypeHash  *types.HexStr
+	MultiSignSecpGroupOutPoint *ckbtypes.OutPoint
 }
 
 var sysCells *SysCells
 
 // LoadSystemCells loads genesis block and extract the secp256k1 and DAO data
 // secp256k1
-// 	transaction = blocks[0].transactions[0]
-// 	secp256k1Code = transaction.output_data[1]
-// 	secp256k1CodeOutPoint = { index: 1, tx_hash: transaction.hash }
-// 	secp256k1DataOutPoint = { index: 3, tx_hash: transaction.hash }
+// 	systemCellTrans = blocks[0].transaction[0]
+// 	secp256k1Code = systemCellTrans.output_data[1]
+// 	secp256k1CodeOutPoint = { index: 1, tx_hash: systemCellTrans.hash }
+// 	secp256k1DataOutPoint = { index: 3, tx_hash: systemCellTrans.hash }
 //
-// 	secp256k1GroupTransaction = blocks[0].transactions[1]
+// 	secp256k1GroupTransaction = blocks[0].transaction[1]
 // 	secp256k1GroupOutPoint = { index: 0, tx_hash: secp256k1GroupTransaction.hash }
 // DAO
-//  daoOutPoint = { index: 2, tx_hash: transaction.hash }
-//  daoCode = transaction.output_data[2]
-//  daoTypeHash = transaction.outputs[2].type.hash
+//  daoOutPoint = { index: 2, tx_hash: systemCellTrans.hash }
+//  daoCode = systemCellTrans.output_data[2]
+//  daoTypeHash = systemCellTrans.outputs[2].type.hash
+// Multi Sign
+//  hash = systemCellTrans.outputs[4].type.compute_hash
+//  out point = { tx_hash: secp256k1GroupTransaction.hash, index: 1 }
 func LoadSystemCells(client rpc.Client) (*SysCells, error) {
 	if sysCells != nil {
 		return sysCells, nil
@@ -47,13 +53,13 @@ func LoadSystemCells(client rpc.Client) (*SysCells, error) {
 		return nil, errtypes.WrapErr(errtypes.RPCErrGetGenesisBlockBroken, err)
 	}
 	if len(block.Transactions) < 2 {
-		return nil, errtypes.WrapErr(errtypes.RPCErrGetGenesisBlockBroken, errors.New("transaction length < 2"))
+		return nil, errtypes.WrapErr(errtypes.RPCErrGetGenesisBlockBroken, errors.New("genesis block trans length < 2"))
 	}
-	if len(block.Transactions[0].Outputs) < 3 {
-		return nil, errtypes.WrapErr(errtypes.RPCErrGetGenesisBlockBroken, errors.New("transactions[0].outputs length < 3"))
+	if len(block.Transactions[0].Outputs) < 5 {
+		return nil, errtypes.WrapErr(errtypes.RPCErrGetGenesisBlockBroken, errors.New("systemCellTrans.outputs length < 5"))
 	}
 	if len(block.Transactions[0].OutputsData) < 3 {
-		return nil, errtypes.WrapErr(errtypes.RPCErrGetGenesisBlockBroken, errors.New("transactions[0].outputs_data length < 3"))
+		return nil, errtypes.WrapErr(errtypes.RPCErrGetGenesisBlockBroken, errors.New("systemCellTrans.outputs_data length < 3"))
 	}
 	// secp256k1
 	sysCellTrans := block.Transactions[0]
@@ -99,6 +105,19 @@ func LoadSystemCells(client rpc.Client) (*SysCells, error) {
 		return nil, errtypes.WrapErr(errtypes.RPCErrGetGenesisBlockBroken, fmt.Errorf("hash dao type script failed: %v", err))
 	}
 
+	// Multi Sign
+	if sysCellTrans.Outputs[4].Type == nil {
+		return nil, errtypes.WrapErr(errtypes.RPCErrGetGenesisBlockBroken, errors.New("systemCellTrans.outputs[4].type is nil"))
+	}
+	multiSignTypeHash, err := ScriptHash(*sysCellTrans.Outputs[4].Type)
+	if err != nil {
+		return nil, errtypes.WrapErr(errtypes.RPCErrGetGenesisBlockBroken, fmt.Errorf("hash multisign type script failed: %v", err))
+	}
+	multiSignSecpGroupOutPoint := ckbtypes.OutPoint{
+		Index:  types.HexUint64(1).Hex(),
+		TxHash: secp256k1GroupTrans.Hash,
+	}
+
 	sysCells = &SysCells{
 		Secp256k1CodeHash:      types.NewHexStr(secp256k1CodeHash),
 		Secp256k1CodeOutPoint:  secp256k1CodeOutPoint,
@@ -108,6 +127,9 @@ func LoadSystemCells(client rpc.Client) (*SysCells, error) {
 		DaoOutPoint: daoOutPoint,
 		DaoCodeHash: types.NewHexStr(daoCodeHash),
 		DaoTypeHash: daoTypeHash,
+
+		MultiSignSecpCellTypeHash:  multiSignTypeHash,
+		MultiSignSecpGroupOutPoint: &multiSignSecpGroupOutPoint,
 	}
 	return sysCells, nil
 }
