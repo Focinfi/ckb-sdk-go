@@ -2,7 +2,7 @@ Nervos CKB SDK in Golang
 
 --- 
 ToDo:
-- [ ] Wallet
+- [x] Wallet
 - [ ] Annotation
 - [ ] Test
 - [ ] CI config
