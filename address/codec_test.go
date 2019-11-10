@@ -8,19 +8,19 @@ import (
 )
 
 func TestEncodeAddress(t *testing.T) {
-	hexStr, err := types.ParseHexStr("0xabcd")
+	hexStr, err := types.ParseHexStr("0x0101226cc6c280b694f9959443e46f715fcc7c148156")
 	if err != nil {
 		t.Fatal(err)
 	}
-	addr, err := encodeAddress("ckt", hexStr.Bytes())
+	addr, err := EncodeAddress("ckt", hexStr.Bytes())
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, "ckt140xszvd20l", addr)
+	assert.Equal(t, "ckt1qyqjymxxc2qtd98ejk2y8er0w90uclq5s9tqzyzs0j", addr)
 }
 
 func TestDecodeAddress(t *testing.T) {
-	prefix, payload, err := decodeAddress("ckt140xszvd20l")
+	prefix, payload, err := DecodeAddress("ckt140xszvd20l")
 	if err != nil {
 		t.Fatal(err)
 	}

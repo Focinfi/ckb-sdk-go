@@ -2,19 +2,16 @@ package wallet
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-
-	"github.com/Focinfi/ckb-sdk-go/types/addrtypes"
-
-	"github.com/Focinfi/ckb-sdk-go/types/errtypes"
 
 	"github.com/Focinfi/ckb-sdk-go/address"
 	"github.com/Focinfi/ckb-sdk-go/cellcollector"
 	"github.com/Focinfi/ckb-sdk-go/key"
 	"github.com/Focinfi/ckb-sdk-go/rpc"
 	"github.com/Focinfi/ckb-sdk-go/types"
+	"github.com/Focinfi/ckb-sdk-go/types/addrtypes"
 	"github.com/Focinfi/ckb-sdk-go/types/ckbtypes"
+	"github.com/Focinfi/ckb-sdk-go/types/errtypes"
 	"github.com/Focinfi/ckb-sdk-go/utils"
 )
 
@@ -24,6 +21,7 @@ type Wallet struct {
 	SkipDataAndType bool
 	lockHashHex     *types.HexStr
 	lock            *ckbtypes.Script
+	// TODO: init lock script and system cells when initialization
 }
 
 func NewWallet(client *rpc.Client, key *key.Key, skipDataAndType bool) (*Wallet, error) {
@@ -117,6 +115,7 @@ func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacit
 		outputs = append(outputs, changeOutput)
 		outputsData = append(outputsData, types.HexStrPrefix)
 	}
+	witnesses := append([]interface{}{ckbtypes.Witness{}}, utils.EmptyWitnessesByLen(len(inputs)-1)...)
 	tx := &ckbtypes.Transaction{
 		Version:     types.HexUint64(0).Hex(),
 		CellDeps:    []ckbtypes.CellDep{},
@@ -124,7 +123,7 @@ func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacit
 		Inputs:      inputs,
 		Outputs:     outputs,
 		OutputsData: outputsData,
-		Witnesses:   []interface{}{ckbtypes.Witness{}},
+		Witnesses:   witnesses,
 	}
 
 	if useDepGroup {
@@ -199,8 +198,6 @@ func (wallet *Wallet) DepositToDAO(ctx context.Context, capacity, fee uint64) (*
 	if err != nil {
 		return nil, err
 	}
-	txJSON, _ := json.MarshalIndent(signedTx, "", "  ")
-	fmt.Println(string(txJSON))
 	txHash, err := wallet.SendTransaction(ctx, *signedTx)
 	if err != nil {
 		return nil, err

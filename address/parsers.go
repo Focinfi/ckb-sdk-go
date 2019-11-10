@@ -14,7 +14,7 @@ type AddrConfig struct {
 }
 
 func Parse(address string, mode types.Mode) (*AddrConfig, error) {
-	prefix, payload, err := decodeAddress(address)
+	prefix, payload, err := DecodeAddress(address)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func Parse(address string, mode types.Mode) (*AddrConfig, error) {
 // address = ckt/ckb | 0x01 | code_hash_index | single_arg
 // return = [0x01, hex(code_hash_index), hex(single_arg)]
 func ParseShortPayloadAddress(address string, mode types.Mode) (*AddrConfig, error) {
-	prefix, payload, err := decodeAddress(address)
+	prefix, payload, err := DecodeAddress(address)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func parseShortPayloadAddress(formatType addrtypes.FormatType, payload []byte) (
 // payload = ckt/ckb | 0x02/0x04(1bit) | code_hash(32bit) | args
 // return = ["0x2"/"0x4", hex(code_hash), hex(args)]
 func ParseFullPayloadAddress(address string, mode types.Mode) (*AddrConfig, error) {
-	prefix, payload, err := decodeAddress(address)
+	prefix, payload, err := DecodeAddress(address)
 	if err != nil {
 		return nil, err
 	}

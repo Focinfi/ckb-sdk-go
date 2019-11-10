@@ -1,10 +1,6 @@
 package addrtypes
 
-import (
-	"github.com/Focinfi/ckb-sdk-go/types"
-)
-
-type FormatType = types.HexUint64
+type FormatType = uint8
 
 // Format types
 // doc: https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0021-ckb-address-format/0021-ckb-address-format.md#payload-format-types

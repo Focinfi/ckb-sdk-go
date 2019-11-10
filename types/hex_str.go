@@ -72,5 +72,9 @@ func (hs *HexStr) Len() int {
 }
 
 func (hs *HexStr) Append(a HexStr) *HexStr {
-	return NewHexStr(append(hs.Bytes(), a.Bytes()...))
+	return hs.AppendBytes(a.Bytes())
+}
+
+func (hs *HexStr) AppendBytes(bin []byte) *HexStr {
+	return NewHexStr(append(hs.Bytes(), bin...))
 }

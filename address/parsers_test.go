@@ -19,37 +19,10 @@ func TestParseShortPayloadAddress(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedData := AddrConfig{
+	expectedData := &AddrConfig{
 		FormatType:    addrtypes.FormatTypeShortLock,
 		CodeHashIndex: addrtypes.CodeHashIndex0,
 		Args:          addr.PubKey.Blake160,
 	}
 	assert.Equal(t, expectedData, data)
-}
-
-func TestParseFullPayloadAddress(t *testing.T) {
-	type args struct {
-		address string
-		mode    types.Mode
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []string
-		wantErr bool
-	}{
-		//{
-		//	name: ""
-		//},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseFullPayloadAddress(tt.args.address, tt.args.mode)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("parseFullPayloadAddress() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			assert.Equal(t, got, tt.want)
-		})
-	}
 }

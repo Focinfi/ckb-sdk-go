@@ -12,20 +12,22 @@ import (
 )
 
 var (
-	testPrivKeyHex = "0x3f86634c419dd7f266793c9fda9fb4ccbe121ce395ed14e699a741a4dabf0177"
-	testPubKeyHex  = "0x03579b698bde7d204bdbf845704d0912a56589f61f43d6143d770945c6af350d4e"
-	fooPrivKeyHex  = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
-	fooPubKeyHex   = "0x039166c289b9f905e55f9e3df9f69d7f356b4a22095f894f4715714aa4b56606af"
+	barPrivKeyHex = "0x3f86634c419dd7f266793c9fda9fb4ccbe121ce395ed14e699a741a4dabf0177"
+	barPubKeyHex  = "0x03579b698bde7d204bdbf845704d0912a56589f61f43d6143d770945c6af350d4e"
+	fooPrivKeyHex = "0x58ceea25f67a6baa2c676493fb376347cad88d4208799fb537f31647a8539550"
+	fooPubKeyHex  = "0x033f452d7ca46844cd8576bb04ec1e51e2a8cf129da7319435e03fcecbb8bd251e"
 )
 
 var (
-	testCli = rpc.NewClient(rpc.DefaultURL)
-	bar, _  = NewWalletByPrivKey(testCli, testPrivKeyHex, true, types.ModeTestNet)
-	foo, _  = NewWalletByPrivKey(testCli, fooPrivKeyHex, true, types.ModeTestNet)
+	testCli    = rpc.NewClient(rpc.DefaultURL)
+	bar, _     = NewWalletByPrivKey(testCli, barPrivKeyHex, true, types.ModeTestNet)
+	barAddr, _ = bar.Key.Address.Generate()
+	foo, _     = NewWalletByPrivKey(testCli, fooPrivKeyHex, true, types.ModeTestNet)
+	fooAddr, _ = foo.Key.Address.Generate()
 )
 
 func TestNewWallet(t *testing.T) {
-	w, err := NewWalletByPrivKey(testCli, testPrivKeyHex, true, types.ModeTestNet)
+	w, err := NewWalletByPrivKey(testCli, barPrivKeyHex, true, types.ModeTestNet)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,6 +64,14 @@ func TestWallet_SendCapacity(t *testing.T) {
 		}
 		assert.Equal(t, dataHex, txInfo.Transaction.OutputsData[0])
 	}
+}
+
+func TestWallet_SendCapacity_MultiSignAddr(t *testing.T) {
+	txHash, err := bar.SendCapacity(context.Background(), multiSignWalletAddr, 900*types.OneCKBShannon, nil, types.OneCKBShannon)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf(txHash)
 }
 
 func TestWallet_DepositToDAO(t *testing.T) {

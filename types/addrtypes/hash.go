@@ -6,7 +6,7 @@ import (
 	"github.com/Focinfi/ckb-sdk-go/types/errtypes"
 )
 
-type CodeHashIndex = types.HexUint64
+type CodeHashIndex = uint8
 
 // Code hash index
 // doc: https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0021-ckb-address-format/0021-ckb-address-format.md#short-payload-format

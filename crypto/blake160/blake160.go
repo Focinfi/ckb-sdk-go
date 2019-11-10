@@ -11,7 +11,11 @@ func Blake160(pubKey string) ([]byte, error) {
 		return nil, err
 	}
 
-	d, err := blake2b.Digest(hexStr.Bytes())
+	return Blake160Binary(hexStr.Bytes())
+}
+
+func Blake160Binary(bin []byte) ([]byte, error) {
+	d, err := blake2b.Digest(bin)
 	if err != nil {
 		return nil, err
 	}

@@ -6,7 +6,7 @@ import (
 	"github.com/btcsuite/btcutil/bech32"
 )
 
-func encodeAddress(prefix string, payload []byte) (string, error) {
+func EncodeAddress(prefix string, payload []byte) (string, error) {
 	payload, err := bech32.ConvertBits(payload, 8, 5, true)
 	if err != nil {
 		return "", errtypes.WrapErr(errtypes.AddressErrConvertBitFail, err)
@@ -18,7 +18,7 @@ func encodeAddress(prefix string, payload []byte) (string, error) {
 	return addr, nil
 }
 
-func decodeAddress(address string) (prefix string, payload []byte, err error) {
+func DecodeAddress(address string) (prefix string, payload []byte, err error) {
 	prefix, data, err := bech32.Decode(address)
 	if err != nil {
 		return "", nil, errtypes.WrapErr(errtypes.CryptoErrBech32DecodeFail, err)

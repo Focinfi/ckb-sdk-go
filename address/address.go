@@ -35,7 +35,7 @@ func (addr *Address) Generate() (string, error) {
 		byte(addrtypes.FormatTypeShortLock),
 		byte(addrtypes.CodeHashIndex0)},
 		addr.PubKey.Blake160.Bytes()...)
-	return encodeAddress(addr.Prefix, payload)
+	return EncodeAddress(addr.Prefix, payload)
 }
 
 // Generates short payload format address
@@ -50,7 +50,7 @@ func (addr *Address) GenerateShortPayloadFormatAddress(hash160HexStr string) (st
 		byte(addrtypes.FormatTypeShortLock),
 		byte(addrtypes.CodeHashIndex1)},
 		hexStr.Bytes()...)
-	return encodeAddress(addr.Prefix, payload)
+	return EncodeAddress(addr.Prefix, payload)
 }
 
 // GenerateFullPayloadAddress generates full payload format address
@@ -74,5 +74,5 @@ func (addr *Address) GenerateFullPayloadAddress(formatType addrtypes.FormatType,
 	payload = append(payload, byte(formatType))
 	payload = append(payload, hexCodeHash.Bytes()...)
 	payload = append(payload, hexArgs.Bytes()...)
-	return encodeAddress(prefix, payload)
+	return EncodeAddress(prefix, payload)
 }
