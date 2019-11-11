@@ -77,7 +77,7 @@ func (wallet *Wallet) Balance(ctx context.Context) (uint64, error) {
 	return totalCap, nil
 }
 
-func (wallet *Wallet) GetUnspentCells(ctx context.Context, needCap uint64) ([]ckbtypes.Cell, error) {
+func (wallet *Wallet) GetUnspentCells(ctx context.Context, needCap uint64) ([]ckbtypes.CellOutputWithOutPoint, error) {
 	collector := cellcollector.NewCellCollector(wallet.Client, wallet.SkipDataAndType)
 	cells, _, err := collector.GetUnspentCells(ctx, wallet.lockHashHex.Hex(), needCap)
 	if err != nil {

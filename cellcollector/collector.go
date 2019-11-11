@@ -25,14 +25,14 @@ func NewCellCollector(cli *rpc.Client, skipDataAndType bool) *CellCollector {
 // GetUnspentCells
 // get all unspent cells when needCap <= 0
 // needCap in shanon
-func (collector *CellCollector) GetUnspentCells(ctx context.Context, lockHash string, needCap uint64) ([]ckbtypes.Cell, uint64, error) {
+func (collector *CellCollector) GetUnspentCells(ctx context.Context, lockHash string, needCap uint64) ([]ckbtypes.CellOutputWithOutPoint, uint64, error) {
 	tipBlockNum, err := collector.Cli.GetTipBlockNumber(ctx)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	var (
-		unspentCells []ckbtypes.Cell
+		unspentCells []ckbtypes.CellOutputWithOutPoint
 		currentFrom  uint64
 		totalCap     uint64
 	)
@@ -78,10 +78,10 @@ func (collector *CellCollector) GetUnspentCells(ctx context.Context, lockHash st
 	return unspentCells, totalCap, nil
 }
 
-func (collector *CellCollector) GetUnspentCellsByLockHashes(ctx context.Context, lockHashes []string, needCap uint64) ([]ckbtypes.Cell, uint64, error) {
+func (collector *CellCollector) GetUnspentCellsByLockHashes(ctx context.Context, lockHashes []string, needCap uint64) ([]ckbtypes.CellOutputWithOutPoint, uint64, error) {
 	var (
 		totalCap     uint64
-		unspentCells []ckbtypes.Cell
+		unspentCells []ckbtypes.CellOutputWithOutPoint
 	)
 	for _, lockHash := range lockHashes {
 		cells, c, err := collector.GetUnspentCells(ctx, lockHash, needCap)

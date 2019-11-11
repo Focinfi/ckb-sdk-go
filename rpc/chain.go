@@ -4,25 +4,10 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/Focinfi/ckb-sdk-go/types/errtypes"
-
-	"github.com/Focinfi/ckb-sdk-go/types/ckbtypes"
-
 	"github.com/Focinfi/ckb-sdk-go/types"
+	"github.com/Focinfi/ckb-sdk-go/types/ckbtypes"
+	"github.com/Focinfi/ckb-sdk-go/types/errtypes"
 )
-
-const DefaultURL = "http://localhost:8114"
-
-type Client struct {
-	URL string
-}
-
-func NewClient(url string) *Client {
-	if url == "" {
-		url = DefaultURL
-	}
-	return &Client{URL: url}
-}
 
 func (client *Client) GetTipBlockNumber(ctx context.Context) (uint64, error) {
 	result, err := RawHTTPPost(ctx, client.URL, "get_tip_block_number", nil)
@@ -150,14 +135,14 @@ func (client *Client) GetHeaderByNumber(ctx context.Context, num types.HexUint64
 	return &header, nil
 }
 
-func (client *Client) GetCellsByLockHash(ctx context.Context, lockHash string, from, to types.HexUint64) ([]ckbtypes.Cell, error) {
+func (client *Client) GetCellsByLockHash(ctx context.Context, lockHash string, from, to types.HexUint64) ([]ckbtypes.CellOutputWithOutPoint, error) {
 	params := []string{lockHash, from.Hex(), to.Hex()}
 	result, err := RawHTTPPost(ctx, client.URL, "get_cells_by_lock_hash", params)
 	if err != nil {
 		return nil, err
 	}
 
-	var cells []ckbtypes.Cell
+	var cells []ckbtypes.CellOutputWithOutPoint
 	if err := json.Unmarshal(result, &cells); err != nil {
 		return nil, errtypes.WrapErr(errtypes.RPCErrResponseDataBroken, err)
 	}
@@ -165,29 +150,14 @@ func (client *Client) GetCellsByLockHash(ctx context.Context, lockHash string, f
 	return cells, nil
 }
 
-//func (client *Client) GetLiveCellsByLockHash(ctx context.Context, lockHash string, from, to types.HexUint64) ([]types.LiveCell, error) {
-//	params := []string{lockHash, from.String(), to.String()}
-//	result, err := RawHTTPPost(ctx, client.URL, "get_live_cells_by_lock_hash", params)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	var cells []types.LiveCell
-//	if err := json.Unmarshal(result, &cells); err != nil {
-//		return nil, types.WrapErr(types.RPCErrResponseDataBroken, err)
-//	}
-//
-//	return cells, nil
-//}
-
-func (client *Client) GetLiveCell(ctx context.Context, outpoint ckbtypes.OutPoint, fetchData bool) (*ckbtypes.CellInfo, error) {
+func (client *Client) GetLiveCell(ctx context.Context, outpoint ckbtypes.OutPoint, fetchData bool) (*ckbtypes.CellWithStatus, error) {
 	params := []interface{}{outpoint, fetchData}
 	result, err := RawHTTPPost(ctx, client.URL, "get_live_cell", params)
 	if err != nil {
 		return nil, err
 	}
 
-	var cellInfo ckbtypes.CellInfo
+	var cellInfo ckbtypes.CellWithStatus
 	if err := json.Unmarshal(result, &cellInfo); err != nil {
 		return nil, errtypes.WrapErr(errtypes.RPCErrResponseDataBroken, err)
 	}
@@ -210,32 +180,16 @@ func (client *Client) GetTransaction(ctx context.Context, txHash string) (*ckbty
 	return &transactionInfo, nil
 }
 
-func (client *Client) SendTransaction(ctx context.Context, transaction ckbtypes.RawTransaction) (string, error) {
-	params := []interface{}{transaction}
-	result, err := RawHTTPPost(ctx, client.URL, "send_transaction", params)
+func (client *Client) GetCellBaseOutputCapacityDetails(ctx context.Context, blockHash string) (*ckbtypes.CellBase, error) {
+	result, err := RawHTTPPost(ctx, client.URL, "get_cellbase_output_capacity_details", []string{blockHash})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	var txHash string
-	if err := json.Unmarshal(result, &txHash); err != nil {
-		return "", errtypes.WrapErr(errtypes.RPCErrResponseDataBroken, err)
+	var cellBase ckbtypes.CellBase
+	if err := json.Unmarshal(result, &cellBase); err != nil {
+		return nil, errtypes.WrapErr(errtypes.RPCErrResponseDataBroken, err)
 	}
 
-	return txHash, nil
-}
-
-func (client *Client) CalculateDAOMaximumWithdraw(ctx context.Context, outpoint ckbtypes.OutPoint, withdrawBlockHash string) (uint64, error) {
-	params := []interface{}{outpoint, withdrawBlockHash}
-	result, err := RawHTTPPost(ctx, client.URL, "calculate_dao_maximum_withdraw", params)
-	if err != nil {
-		return 0, err
-	}
-
-	var hexUint64 types.HexUint64
-	if err := json.Unmarshal(result, &hexUint64); err != nil {
-		return 0, errtypes.WrapErr(errtypes.RPCErrResponseDataBroken, err)
-	}
-
-	return hexUint64.Uint64(), nil
+	return &cellBase, nil
 }

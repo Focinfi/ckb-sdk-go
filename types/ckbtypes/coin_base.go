@@ -1,6 +1,6 @@
 package ckbtypes
 
-type CoinBase struct {
+type CellBase struct {
 	Primary        string `json:"primary"`
 	ProposalReward string `json:"proposal_reward"`
 	Secondary      string `json:"secondary"`
