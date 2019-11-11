@@ -14,6 +14,7 @@ import (
 
 type SysCells struct {
 	Secp256k1CodeHash      *types.HexStr
+	Secp256k1TypeHash      *types.HexStr
 	Secp256k1CodeOutPoint  *ckbtypes.OutPoint
 	Secp256k1DataOutPoint  *ckbtypes.OutPoint
 	Secp256k1GroupOutPoint *ckbtypes.OutPoint
@@ -72,7 +73,14 @@ func LoadSystemCells(client rpc.Client) (*SysCells, error) {
 	if err != nil {
 		return nil, errtypes.WrapErr(errtypes.RPCErrGetGenesisBlockBroken, fmt.Errorf("hash secp256k1 code failed: %v", err))
 	}
-
+	secp256k1Type := sysCellTrans.Outputs[1].Type
+	if secp256k1Type == nil {
+		return nil, errtypes.WrapErr(errtypes.RPCErrGetGenesisBlockBroken, fmt.Errorf("hash secp256k1 code failed: %v", err))
+	}
+	secp256k1TypeHash, err := ScriptHash(*secp256k1Type)
+	if err != nil {
+		return nil, err
+	}
 	secp256k1CodeOutPoint := &ckbtypes.OutPoint{
 		Index:  types.HexUint64(1).Hex(),
 		TxHash: sysCellTrans.Hash,
@@ -120,6 +128,7 @@ func LoadSystemCells(client rpc.Client) (*SysCells, error) {
 
 	sysCells = &SysCells{
 		Secp256k1CodeHash:      types.NewHexStr(secp256k1CodeHash),
+		Secp256k1TypeHash:      secp256k1TypeHash,
 		Secp256k1CodeOutPoint:  secp256k1CodeOutPoint,
 		Secp256k1DataOutPoint:  secp256k1DataOutPoint,
 		Secp256k1GroupOutPoint: secp256k1GroupOutPoint,

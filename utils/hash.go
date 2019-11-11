@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"fmt"
+
 	"github.com/Focinfi/ckb-sdk-go/address"
 	"github.com/Focinfi/ckb-sdk-go/crypto/blake2b"
 	"github.com/Focinfi/ckb-sdk-go/serializers"
@@ -25,6 +27,7 @@ func NewLockScript(pubKey string) (*ckbtypes.Script, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("lock args:", k.Blake160.Hex())
 	return &ckbtypes.Script{
 		Args:     k.Blake160.Hex(),
 		CodeHash: types.BlockAssemblerCodeHash,

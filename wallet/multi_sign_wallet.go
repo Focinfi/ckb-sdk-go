@@ -122,7 +122,7 @@ func (wallet MultiSignWallet) Lock() ckbtypes.Script {
 
 func (wallet MultiSignWallet) GenerateTx(ctx context.Context, targetAddr string, capacity uint64, privKeys []string, data []byte, fee uint64) (*ckbtypes.Transaction, error) {
 	if len(privKeys) != int(wallet.Config.Threshold) {
-		return nil, errtypes.WrapErr(errtypes.MultiSignWalletPrivKeysNumberNotMatchThreshod, nil)
+		return nil, errtypes.WrapErr(errtypes.MultiSignWalletPrivKeysNumberNotMatchThreshold, nil)
 	}
 	targetAddrConfig, err := address.Parse(targetAddr, wallet.Mode)
 	if err != nil {

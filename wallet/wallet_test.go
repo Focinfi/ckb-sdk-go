@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/Focinfi/ckb-sdk-go/types/ckbtypes"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Focinfi/ckb-sdk-go/types"
@@ -20,14 +22,14 @@ var (
 
 var (
 	testCli    = rpc.NewClient(rpc.DefaultURL)
-	bar, _     = NewWalletByPrivKey(testCli, barPrivKeyHex, true, types.ModeTestNet)
+	bar, _     = NewWalletByPrivKey(testCli, barPrivKeyHex, true, ckbtypes.HashTypeType, types.ModeTestNet)
 	barAddr, _ = bar.Key.Address.Generate()
-	foo, _     = NewWalletByPrivKey(testCli, fooPrivKeyHex, true, types.ModeTestNet)
+	foo, _     = NewWalletByPrivKey(testCli, fooPrivKeyHex, true, ckbtypes.HashTypeType, types.ModeTestNet)
 	fooAddr, _ = foo.Key.Address.Generate()
 )
 
 func TestNewWallet(t *testing.T) {
-	w, err := NewWalletByPrivKey(testCli, barPrivKeyHex, true, types.ModeTestNet)
+	w, err := NewWalletByPrivKey(testCli, barPrivKeyHex, true, ckbtypes.HashTypeType, types.ModeTestNet)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,10 +40,11 @@ func TestNewWallet(t *testing.T) {
 }
 
 func TestWallet_Balance(t *testing.T) {
-	_, err := bar.Balance(context.Background())
+	balance, err := bar.Balance(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Log("balance:", balance)
 }
 
 func TestWallet_SendCapacity(t *testing.T) {

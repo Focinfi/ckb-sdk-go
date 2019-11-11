@@ -28,10 +28,11 @@ const (
 	AddressErrFormatTypeWrong      ErrType = "address-format-type-wrong-error"
 )
 
-// multi sign wallet
+// wallet
 const (
-	MultiSignWalletConfigErrPubKeysNumberTooBig   ErrType = "multi-sign-wallet-config-public-keys-number-too-big-error"
-	MultiSignWalletPrivKeysNumberNotMatchThreshod ErrType = "multi-sign-address-private-keys-number-match-threshold-error"
+	WalletErrInvalidHashType                       ErrType = "wallet-invalid-hash-type-err"
+	MultiSignWalletConfigErrPubKeysNumberTooBig    ErrType = "multi-sign-wallet-config-public-keys-number-too-big-error"
+	MultiSignWalletPrivKeysNumberNotMatchThreshold ErrType = "multi-sign-address-private-keys-number-match-threshold-error"
 )
 
 // key error
