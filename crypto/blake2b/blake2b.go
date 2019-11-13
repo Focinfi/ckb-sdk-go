@@ -6,6 +6,7 @@ import (
 
 const personal = "ckb-default-hash"
 
+// Digest digests the data with blake2b
 func Digest(data []byte) ([]byte, error) {
 	config := &blake2b.Config{Size: 32, Person: []byte(personal)}
 	h, err := blake2b.New(config)

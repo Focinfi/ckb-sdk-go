@@ -22,7 +22,7 @@ func TestParseShortPayloadAddress(t *testing.T) {
 	expectedData := &AddrConfig{
 		FormatType:    addrtypes.FormatTypeShortLock,
 		CodeHashIndex: addrtypes.CodeHashIndex0,
-		Args:          addr.PubKey.Blake160,
+		Args:          addr.KeyHash.Blake160,
 	}
 	assert.Equal(t, expectedData, data)
 }

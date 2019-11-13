@@ -169,7 +169,7 @@ func MultiSignTransaction(privKeys []string, transaction ckbtypes.Transaction, c
 		return nil, err
 	}
 	witnesses := []interface{}{types.NewHexStr(emptiedWitnessSlr.Serialize()).Hex()}
-	if len(transaction.Witnesses) > 0 {
+	if len(transaction.Witnesses) > 1 {
 		witnesses = append(witnesses, transaction.Witnesses[1:]...)
 	}
 

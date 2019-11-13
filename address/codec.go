@@ -6,6 +6,7 @@ import (
 	"github.com/btcsuite/btcutil/bech32"
 )
 
+// EncodeAddress encode the given prefix and payload data into the address with bech32
 func EncodeAddress(prefix string, payload []byte) (string, error) {
 	payload, err := bech32.ConvertBits(payload, 8, 5, true)
 	if err != nil {
@@ -18,6 +19,7 @@ func EncodeAddress(prefix string, payload []byte) (string, error) {
 	return addr, nil
 }
 
+// DecodeAddress decodes the given address into prefix and payload data
 func DecodeAddress(address string) (prefix string, payload []byte, err error) {
 	prefix, data, err := bech32.Decode(address)
 	if err != nil {

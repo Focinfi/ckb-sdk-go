@@ -1,5 +1,6 @@
 package serializers
 
+// Serializer represents a serializer which can serialize the data into byte slice
 type Serializer interface {
 	Serialize() []byte
 }

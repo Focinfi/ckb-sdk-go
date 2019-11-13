@@ -10,6 +10,7 @@ import (
 	"github.com/Focinfi/ckb-sdk-go/types/errtypes"
 )
 
+// CellCollector represents a collector to collect the cells via rpc
 type CellCollector struct {
 	Cli             *rpc.Client
 	SkipDataAndType bool
@@ -22,9 +23,9 @@ func NewCellCollector(cli *rpc.Client, skipDataAndType bool) *CellCollector {
 	}
 }
 
-// GetUnspentCells
-// get all unspent cells when needCap <= 0
-// needCap in shanon
+// GetUnspentCells gets unspent cells.
+// Get all unspent cells when needCap <= 0
+// The given needCap in shanon
 func (collector *CellCollector) GetUnspentCells(ctx context.Context, lockHash string, needCap uint64) ([]ckbtypes.CellOutputWithOutPoint, uint64, error) {
 	tipBlockNum, err := collector.Cli.GetTipBlockNumber(ctx)
 	if err != nil {
@@ -78,6 +79,7 @@ func (collector *CellCollector) GetUnspentCells(ctx context.Context, lockHash st
 	return unspentCells, totalCap, nil
 }
 
+// GetUnspentCellsByLockHashes gets unspent cells by lock hashes
 func (collector *CellCollector) GetUnspentCellsByLockHashes(ctx context.Context, lockHashes []string, needCap uint64) ([]ckbtypes.CellOutputWithOutPoint, uint64, error) {
 	var (
 		totalCap     uint64
@@ -98,6 +100,9 @@ func (collector *CellCollector) GetUnspentCellsByLockHashes(ctx context.Context,
 	return nil, 0, nil
 }
 
+// GatherInputs gathers the inputs.
+// The given needCap <= minCap.
+// The given needCap + fee >= all unspent cell capacity
 func (collector *CellCollector) GatherInputs(ctx context.Context, lockHashes []string, needCap, minCap, minChangeCap, fee uint64) ([]ckbtypes.Input, uint64, error) {
 	if needCap < minCap {
 		return nil, 0, errtypes.WrapErr(errtypes.RPCErrGetInputCapacityTooSmall, fmt.Errorf("need capactiy is less than %d", minCap))

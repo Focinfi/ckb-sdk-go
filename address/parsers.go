@@ -6,6 +6,7 @@ import (
 	"github.com/Focinfi/ckb-sdk-go/types/errtypes"
 )
 
+// AddrConfig contains the parts a address
 type AddrConfig struct {
 	FormatType    addrtypes.FormatType
 	CodeHashIndex addrtypes.CodeHashIndex
@@ -13,6 +14,7 @@ type AddrConfig struct {
 	Args          *types.HexStr
 }
 
+// Parse parses the given address in the given mode, returns a AddressConfig
 func Parse(address string, mode types.Mode) (*AddrConfig, error) {
 	prefix, payload, err := DecodeAddress(address)
 	if err != nil {

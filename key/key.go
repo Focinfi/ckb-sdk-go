@@ -10,6 +10,7 @@ import (
 
 const privKeyCharCount = 66
 
+// Key represents a asymmetric encryption pair of private key and public key
 type Key struct {
 	privKeyHex *types.HexStr
 	pubKeyHex  *types.HexStr
@@ -18,6 +19,7 @@ type Key struct {
 	Address    *address.Address
 }
 
+// NewFromPrivKeyHex creates and returns a new Key depends on the given private 0x prefixed hex string and mode using secp256k1
 func NewFromPrivKeyHex(hexStr string, mode types.Mode) (*Key, error) {
 	if len(hexStr) != privKeyCharCount {
 		return nil, errtypes.WrapErr(errtypes.KeyErrPrivateKeySizeWrong, nil)
@@ -41,6 +43,7 @@ func NewFromPrivKeyHex(hexStr string, mode types.Mode) (*Key, error) {
 	}, nil
 }
 
+// Sign signs data of decoding from the given hexStr using the private key
 func (key *Key) Sign(hexStr string) (*types.HexStr, error) {
 	dataHex, err := types.ParseHexStr(hexStr)
 	if err != nil {
@@ -54,7 +57,7 @@ func (key *Key) Sign(hexStr string) (*types.HexStr, error) {
 	return types.NewHexStr(sign.Serialize()), nil
 }
 
-// SignRecoverableFor32BytesHex
+// SignRecoverableFor32BytesHex signs the data of decoding from the given hex32BytesStr using the private key in recoverable mode
 func (key *Key) SignRecoverableFor32BytesHex(hex32BytesStr string) (*types.HexStr, error) {
 	dataHex, err := types.ParseHexStr(hex32BytesStr)
 	if err != nil {

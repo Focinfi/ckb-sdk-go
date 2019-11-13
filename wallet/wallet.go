@@ -15,6 +15,7 @@ import (
 	"github.com/Focinfi/ckb-sdk-go/utils"
 )
 
+// Wallet represents a CKB wallet
 type Wallet struct {
 	Client          *rpc.Client
 	Key             *key.Key
@@ -25,6 +26,7 @@ type Wallet struct {
 	sysCells        *utils.SysCells
 }
 
+// NewWallet creates and returns a new Wallet, loads the system cells, cache the lock script and compute its hash
 func NewWallet(client *rpc.Client, key *key.Key, skipDataAndType bool, hashType ckbtypes.HashType) (*Wallet, error) {
 	sysCells, err := utils.LoadSystemCells(*client)
 	if err != nil {
@@ -40,7 +42,7 @@ func NewWallet(client *rpc.Client, key *key.Key, skipDataAndType bool, hashType 
 		return nil, errtypes.WrapErr(errtypes.WalletErrInvalidHashType, nil)
 	}
 	lock := ckbtypes.Script{
-		Args:     key.Address.PubKey.Blake160.Hex(),
+		Args:     key.Address.KeyHash.Blake160.Hex(),
 		CodeHash: codeHash,
 		HashType: ckbtypes.HashTypeType,
 	}
@@ -60,6 +62,7 @@ func NewWallet(client *rpc.Client, key *key.Key, skipDataAndType bool, hashType 
 	}, nil
 }
 
+// NewWalletByPrivKey creates and returns a new Wallet from a private key
 func NewWalletByPrivKey(client *rpc.Client, privKey string, skipDataAndType bool, hashType ckbtypes.HashType, mode types.Mode) (*Wallet, error) {
 	k, err := key.NewFromPrivKeyHex(privKey, mode)
 	if err != nil {
@@ -68,6 +71,7 @@ func NewWalletByPrivKey(client *rpc.Client, privKey string, skipDataAndType bool
 	return NewWallet(client, k, skipDataAndType, hashType)
 }
 
+// Balance gets the balance
 func (wallet *Wallet) Balance(ctx context.Context) (uint64, error) {
 	collector := cellcollector.NewCellCollector(wallet.Client, wallet.SkipDataAndType)
 	_, totalCap, err := collector.GetUnspentCells(ctx, wallet.lockHashHex.Hex(), 0)
@@ -77,6 +81,7 @@ func (wallet *Wallet) Balance(ctx context.Context) (uint64, error) {
 	return totalCap, nil
 }
 
+// GetUnspentCells get the unspent cells
 func (wallet *Wallet) GetUnspentCells(ctx context.Context, needCap uint64) ([]ckbtypes.CellOutputWithOutPoint, error) {
 	collector := cellcollector.NewCellCollector(wallet.Client, wallet.SkipDataAndType)
 	cells, _, err := collector.GetUnspentCells(ctx, wallet.lockHashHex.Hex(), needCap)
@@ -86,6 +91,7 @@ func (wallet *Wallet) GetUnspentCells(ctx context.Context, needCap uint64) ([]ck
 	return cells, nil
 }
 
+// GenerateTx generates a transaction ready to send
 func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacity uint64, data []byte, fee uint64, useDepGroup bool) (*ckbtypes.Transaction, error) {
 	config, err := address.Parse(targetAddr, wallet.Key.Address.Mode)
 	var codeHash *types.HexStr
@@ -154,6 +160,7 @@ func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacit
 	return utils.SignTransaction(*wallet.Key, *tx)
 }
 
+// SendCapacity sends the capacity form the wallet address to the given targetAddr
 func (wallet *Wallet) SendCapacity(ctx context.Context, targetAddr string, capacity uint64, data []byte, fee uint64) (string, error) {
 	tx, err := wallet.GenerateTx(ctx, targetAddr, capacity, data, fee, true)
 	if err != nil {
@@ -162,6 +169,7 @@ func (wallet *Wallet) SendCapacity(ctx context.Context, targetAddr string, capac
 	return wallet.SendTransaction(ctx, *tx)
 }
 
+// DepositToDAO deposit the given capacity into the DAO
 func (wallet *Wallet) DepositToDAO(ctx context.Context, capacity, fee uint64) (*ckbtypes.OutPoint, error) {
 	sysCells, err := utils.LoadSystemCells(*wallet.Client)
 	if err != nil {
@@ -225,6 +233,7 @@ func (wallet *Wallet) DepositToDAO(ctx context.Context, capacity, fee uint64) (*
 	}, nil
 }
 
+// StartWithdrawingFromDAO sends the transaction to create the withdraw cell form the deposit cell
 func (wallet *Wallet) StartWithdrawingFromDAO(ctx context.Context, depositOutPoint ckbtypes.OutPoint, fee uint64) (*ckbtypes.OutPoint, error) {
 	cellInfo, err := wallet.Client.GetLiveCell(ctx, depositOutPoint, false)
 	if err != nil {
@@ -305,6 +314,7 @@ func (wallet *Wallet) StartWithdrawingFromDAO(ctx context.Context, depositOutPoi
 	}, nil
 }
 
+// GenWithdrawFromDAOTx generates the transaction to withdraw from the DAO
 func (wallet *Wallet) GenWithdrawFromDAOTx(ctx context.Context, depositOutpoint, withdrawingOutpoint ckbtypes.OutPoint, fee uint64) (*ckbtypes.Transaction, error) {
 	cellInfo, err := wallet.Client.GetLiveCell(ctx, withdrawingOutpoint, true)
 	if err != nil {
@@ -395,10 +405,12 @@ func (wallet *Wallet) GenWithdrawFromDAOTx(ctx context.Context, depositOutpoint,
 	return utils.SignTransaction(*wallet.Key, tx)
 }
 
+// GetTransaction gets the transaction
 func (wallet *Wallet) GetTransaction(ctx context.Context, hash string) (*ckbtypes.TransactionInfo, error) {
 	return wallet.Client.GetTransaction(ctx, hash)
 }
 
+// BlockAssemblerConfig gets the block assembler config used in ckb.toml
 func (wallet *Wallet) BlockAssemblerConfig() string {
 	return fmt.Sprintf(
 		`[block_assembler]
@@ -408,19 +420,23 @@ func (wallet *Wallet) BlockAssemblerConfig() string {
 		wallet.Lock().Args)
 }
 
+// SendTransaction sends the transaction
 func (wallet *Wallet) SendTransaction(ctx context.Context, transaction ckbtypes.Transaction) (string, error) {
 	return wallet.Client.SendTransaction(ctx, transaction.ToRaw())
 }
 
+// GatherInputs gathers inputs
 func (wallet *Wallet) GatherInputs(ctx context.Context, capacity, minCap, minChangeCap, fee uint64) ([]ckbtypes.Input, uint64, error) {
 	collector := cellcollector.NewCellCollector(wallet.Client, wallet.SkipDataAndType)
 	return collector.GatherInputs(ctx, []string{wallet.lockHashHex.Hex()}, capacity, minChangeCap, minChangeCap, fee)
 }
 
+// Lock gets the lock of this wallet
 func (wallet *Wallet) Lock() *ckbtypes.Script {
 	return wallet.lock
 }
 
+// Lock gets the lock hash
 func (wallet *Wallet) CodeHash(ctx context.Context) string {
 	return wallet.Lock().CodeHash
 }

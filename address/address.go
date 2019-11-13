@@ -6,21 +6,24 @@ import (
 	"github.com/Focinfi/ckb-sdk-go/types/errtypes"
 )
 
+// Address represents a CKB address
+// rfc-21: https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0021-ckb-address-format/0021-ckb-address-format.md
 type Address struct {
-	Mode   types.Mode
-	PubKey *PubKey
-	Prefix string
+	Mode    types.Mode
+	KeyHash *KeyHash
+	Prefix  string
 }
 
+// NewAddressFromPubKey creates and returns a new Address
 func NewAddressFromPubKey(pubKey string, mode types.Mode) (*Address, error) {
 	pk, err := NewPubKey(pubKey)
 	if err != nil {
 		return nil, err
 	}
 	return &Address{
-		Mode:   mode,
-		PubKey: pk,
-		Prefix: addrtypes.PrefixForMode(mode),
+		Mode:    mode,
+		KeyHash: pk,
+		Prefix:  addrtypes.PrefixForMode(mode),
 	}, nil
 }
 
@@ -28,13 +31,13 @@ func NewAddressFromPubKey(pubKey string, mode types.Mode) (*Address, error) {
 // payload = type(01) | code hash index(00) | pubkey Blake160
 // see https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0021-ckb-address-format/0021-ckb-address-format.md for more info.
 func (addr *Address) Generate() (string, error) {
-	if addr.PubKey == nil {
+	if addr.KeyHash == nil {
 		return "", errtypes.WrapErr(errtypes.AddressErrEmptyPubKey, nil)
 	}
 	payload := append([]byte{
 		byte(addrtypes.FormatTypeShortLock),
 		byte(addrtypes.CodeHashIndex0)},
-		addr.PubKey.Blake160.Bytes()...)
+		addr.KeyHash.Blake160.Bytes()...)
 	return EncodeAddress(addr.Prefix, payload)
 }
 
