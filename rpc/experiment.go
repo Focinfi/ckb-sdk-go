@@ -37,3 +37,17 @@ func (client *Client) CalculateDAOMaximumWithdraw(ctx context.Context, outpoint 
 
 	return hexUint64.Uint64(), nil
 }
+
+func (client *Client) EstimateFeeRate(ctx context.Context, expectedConfirmBlocks types.HexUint64) (*ckbtypes.FeeRate, error) {
+	params := []interface{}{expectedConfirmBlocks.Hex()}
+	result, err := RawHTTPPost(ctx, client.URL, "estimate_fee_rate", params)
+	if err != nil {
+		return nil, err
+	}
+
+	var feeRate ckbtypes.FeeRate
+	if err := json.Unmarshal(result, &feeRate); err != nil {
+		return nil, errtypes.WrapErr(errtypes.RPCErrResponseDataBroken, err)
+	}
+	return &feeRate, nil
+}

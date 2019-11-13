@@ -70,3 +70,10 @@ func RawHTTPPost(ctx context.Context, url string, method string, params interfac
 	}
 	return respBody.Result, nil
 }
+
+func optionHex(hexer interface{ Hex() string }) interface{} {
+	if hexer != nil {
+		return hexer.Hex()
+	}
+	return nil
+}
