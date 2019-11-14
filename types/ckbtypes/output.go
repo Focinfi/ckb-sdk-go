@@ -18,7 +18,7 @@ func (output Output) Clone() *Output {
 		},
 	}
 	if output.Type != nil {
-		output.Type = &Script{
+		c.Type = &Script{
 			Args:     output.Type.Args,
 			CodeHash: output.Type.CodeHash,
 			HashType: output.Type.HashType,

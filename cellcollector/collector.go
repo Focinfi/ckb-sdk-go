@@ -97,7 +97,7 @@ func (collector *CellCollector) GetUnspentCellsByLockHashes(ctx context.Context,
 		}
 	}
 
-	return nil, 0, nil
+	return unspentCells, totalCap, nil
 }
 
 // GatherInputs gathers the inputs.
@@ -129,8 +129,7 @@ func (collector *CellCollector) GatherInputs(ctx context.Context, lockHashes []s
 		}
 		inputs = append(inputs, input)
 		inputCap += hexNum.Uint64()
-		diff := inputCap - totalCap
-		if diff >= minChangeCap || diff == 0 {
+		if inputCap >= totalCap+minChangeCap || inputCap == totalCap {
 			return inputs, inputCap, nil
 		}
 	}

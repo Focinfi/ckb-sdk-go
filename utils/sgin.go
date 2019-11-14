@@ -34,33 +34,38 @@ func SignTransaction(key key.Key, transaction ckbtypes.Transaction) (*ckbtypes.T
 	emptiedWitnessData := emptiedWitnessSerializer.Serialize()
 	emptiedWitnessDataSize := len(emptiedWitnessData)
 
-	data := append(txHash.Bytes(), types.HexUint64(emptiedWitnessDataSize).LittleEndianBytes(8)...)
-	data = append(data, emptiedWitnessData...)
+	toSignData := append(txHash.Bytes(), types.HexUint64(emptiedWitnessDataSize).LittleEndianBytes(8)...)
+	toSignData = append(toSignData, emptiedWitnessData...)
 	for i := 1; i < len(transaction.Witnesses); i++ {
+		var witnessData []byte
 		switch w := transaction.Witnesses[i].(type) {
 		case ckbtypes.Witness:
 			slr, err := serializers.NewWitnessArgs(w)
 			if err != nil {
 				return nil, err
 			}
-			data = append(data, slr.Serialize()...)
+			witnessData = slr.Serialize()
 		case *ckbtypes.Witness:
 			slr, err := serializers.NewWitnessArgs(*w)
 			if err != nil {
 				return nil, err
 			}
-			data = append(data, slr.Serialize()...)
+			witnessData = slr.Serialize()
 		case string:
 			hexStr, err := types.ParseHexStr(w)
 			if err != nil {
 				return nil, err
 			}
-			data = append(data, hexStr.Bytes()...)
+
+			witnessData = hexStr.Bytes()
 		default:
 			return nil, errtypes.WrapErr(errtypes.GenTransErrHexWitnessTypeWrong, nil)
 		}
+		witnessDataSize := types.HexUint64(len(witnessData))
+		toSignData = append(toSignData, witnessDataSize.LittleEndianBytes(8)...)
+		toSignData = append(toSignData, witnessData...)
 	}
-	message, err := blake2b.Digest(data)
+	message, err := blake2b.Digest(toSignData)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +84,7 @@ func SignTransaction(key key.Key, transaction ckbtypes.Transaction) (*ckbtypes.T
 
 	witnesses := []interface{}{emptiedWitnessHex}
 	if len(transaction.Witnesses) > 1 {
-		witnesses = append(witnesses, transaction.Witnesses...)
+		witnesses = append(witnesses, transaction.Witnesses[1:]...)
 	}
 	return &ckbtypes.Transaction{
 		Hash:        txHash.Hex(),

@@ -43,7 +43,7 @@ func NewOutput(output ckbtypes.Output) (*Output, error) {
 	}
 	var typeScript *Script
 	if output.Type != nil {
-		typeScript, err = NewScript(output.Lock)
+		typeScript, err = NewScript(*output.Type)
 		if err != nil {
 			return nil, errtypes.WrapErr(errtypes.SerializationErrInvalidTypeScript, err)
 		}

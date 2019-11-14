@@ -2,6 +2,7 @@ package wallet
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/Focinfi/ckb-sdk-go/types/ckbtypes"
@@ -48,13 +49,9 @@ func TestWallet_Balance(t *testing.T) {
 }
 
 func TestWallet_SendCapacity(t *testing.T) {
-	fooAddr, err := foo.Key.Address.Generate()
-	if err != nil {
-		t.Fatal(err)
-	}
 	data := []byte("123abc123abc")
 	dataHex := types.NewHexStr(data).Hex()
-	txHash, err := bar.SendCapacity(context.Background(), fooAddr, 200*types.OneCKBShannon, data, types.OneCKBShannon)
+	txHash, err := bar.SendCapacity(context.Background(), barAddr, 200*types.OneCKBShannon, data, types.OneCKBShannon)
 	if err != nil {
 		t.Fatal(err)
 	} else {
@@ -82,7 +79,37 @@ func TestWallet_DepositToDAO(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("deposit out point:", outPoint)
+	t.Log(outPoint)
+}
+
+func TestWallet_StartWithdrawingFromDAO(t *testing.T) {
+	depositOutPoint := ckbtypes.OutPoint{
+		Index:  "0x0",
+		TxHash: "0x89dbfcd76f4d1ab592e97c99b86f93160b8f403c7228f639f66ff8ab8d44c3a3",
+	}
+	withdrawOutPoint, err := bar.StartWithdrawingFromDAO(context.Background(), depositOutPoint, types.OneCKBShannon)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(withdrawOutPoint)
+}
+
+// 0x657a6d0cc99ee3ed015d48301f0b122f200a429dc1e75350b0f91f4bdfe93935
+func TestWallet_GenWithdrawFromDAOTx(t *testing.T) {
+	depositOutPoint := ckbtypes.OutPoint{
+		Index:  "0x0",
+		TxHash: "0x89dbfcd76f4d1ab592e97c99b86f93160b8f403c7228f639f66ff8ab8d44c3a3",
+	}
+	withdrawOutPoint := ckbtypes.OutPoint{
+		Index:  "0x0",
+		TxHash: "0x657a6d0cc99ee3ed015d48301f0b122f200a429dc1e75350b0f91f4bdfe93935",
+	}
+	tx, err := bar.GenWithdrawFromDAOTx(context.Background(), depositOutPoint, withdrawOutPoint, types.OneCKBShannon)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txJSON, _ := json.MarshalIndent(tx, "", "  ")
+	t.Log(string(txJSON))
 }
 
 func balanceOfBarAndFoo() (uint64, uint64) {

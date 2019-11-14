@@ -44,7 +44,7 @@ func NewWallet(client *rpc.Client, key *key.Key, skipDataAndType bool, hashType 
 	lock := ckbtypes.Script{
 		Args:     key.Address.KeyHash.Blake160.Hex(),
 		CodeHash: codeHash,
-		HashType: ckbtypes.HashTypeType,
+		HashType: hashType,
 	}
 	lockHashHex, err := utils.ScriptHash(lock)
 	if err != nil {
@@ -94,12 +94,15 @@ func (wallet *Wallet) GetUnspentCells(ctx context.Context, needCap uint64) ([]ck
 // GenerateTx generates a transaction ready to send
 func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacity uint64, data []byte, fee uint64, useDepGroup bool) (*ckbtypes.Transaction, error) {
 	config, err := address.Parse(targetAddr, wallet.Key.Address.Mode)
+	if err != nil {
+		return nil, err
+	}
 	var codeHash *types.HexStr
 	switch config.FormatType {
 	case addrtypes.FormatTypeShortLock:
 		switch config.CodeHashIndex {
 		case addrtypes.CodeHashIndex0:
-			codeHash = wallet.sysCells.Secp256k1CodeHash
+			codeHash = wallet.sysCells.Secp256k1TypeHash
 		case addrtypes.CodeHashIndex1:
 			codeHash = wallet.sysCells.MultiSignSecpCellTypeHash
 		}
@@ -126,7 +129,7 @@ func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacit
 		return nil, err
 	}
 	minCap := (outputByteSize + uint64(dataHex.Len())) * types.OneCKBShannon
-	minChangeCap := (minChangeByteSize + uint64(dataHex.Len())) * types.OneCKBShannon
+	minChangeCap := minChangeByteSize * types.OneCKBShannon
 	inputs, inputCap, err := wallet.GatherInputs(ctx, capacity, minCap, minChangeCap, fee)
 	if err != nil {
 		return nil, err
@@ -198,6 +201,9 @@ func (wallet *Wallet) DepositToDAO(ctx context.Context, capacity, fee uint64) (*
 	minCap := (outputByteSize + uint64(daoDepositOutputDataHex.Len())) * types.OneCKBShannon
 	minChangeCap := changeOutputByteSize * types.OneCKBShannon
 	inputs, inputsCap, err := wallet.GatherInputs(ctx, capacity, minCap, minChangeCap, fee)
+	if err != nil {
+		return nil, err
+	}
 	outputs := []ckbtypes.Output{output}
 	outputsData := []string{daoDepositOutputDataHex.Hex()}
 	changeOutputCap := inputsCap - (capacity + fee)
@@ -287,7 +293,7 @@ func (wallet *Wallet) StartWithdrawingFromDAO(ctx context.Context, depositOutPoi
 		Since:          types.HexUint64(0).Hex(),
 	}
 	inputs = append([]ckbtypes.Input{firstInput}, inputs...)
-	witness := append([]interface{}{ckbtypes.Witness{}}, utils.EmptyWitnessesByLen(len(inputs)))
+	witness := append([]interface{}{ckbtypes.Witness{}}, utils.EmptyWitnessesByLen(len(inputs)-1)...)
 	tx := ckbtypes.Transaction{
 		Version: types.HexUint64(0).Hex(),
 		CellDeps: []ckbtypes.CellDep{
@@ -331,11 +337,16 @@ func (wallet *Wallet) GenWithdrawFromDAOTx(ctx context.Context, depositOutpoint,
 		return nil, errtypes.WrapErr(errtypes.DAOWithdrawErrDepositTxNotCommitted, nil)
 	}
 
-	depositBlockHex, err := types.ParseHexUint64(cellInfo.Cell.Data.Content)
+	depositBlockNumberHex, err := types.ParseHexUint64(cellInfo.Cell.Data.Content)
 	if err != nil {
 		return nil, err
 	}
-	depositBlock, err := wallet.Client.GetBlockByNumber(ctx, *depositBlockHex)
+	reversedDepositNumberHex := types.NewHexStr(depositBlockNumberHex.LittleEndianBytes(8)).Hex()
+	depositBlockNumberHex, err = types.ParseHexUint64(reversedDepositNumberHex)
+	if err != nil {
+		return nil, err
+	}
+	depositBlock, err := wallet.Client.GetBlockByNumber(ctx, *depositBlockNumberHex)
 	if err != nil {
 		return nil, err
 	}
@@ -360,12 +371,12 @@ func (wallet *Wallet) GenWithdrawFromDAOTx(ctx context.Context, depositOutpoint,
 		depositEpochs += 1
 	}
 	lockEpochs := (depositEpochs + (DAOLockPeriodEpochs - 1)) / DAOLockPeriodEpochs * DAOLockPeriodEpochs
-	minmalEpoch := utils.Epoch{
+	minimalEpoch := utils.Epoch{
 		Number: depositEpoch.Number + lockEpochs,
 		Index:  depositEpoch.Index,
 		Length: depositEpoch.Length,
 	}
-	minmalSince := minmalEpoch.Since()
+	minimalSince := minimalEpoch.Since()
 	outputCapacity, err := wallet.Client.CalculateDAOMaximumWithdraw(ctx, *depositOutpoint.Clone(), withdrawBlock.Header.Hash)
 	outputs := []ckbtypes.Output{
 		{
@@ -393,7 +404,7 @@ func (wallet *Wallet) GenWithdrawFromDAOTx(ctx context.Context, depositOutpoint,
 		Inputs: []ckbtypes.Input{
 			{
 				PreviousOutput: *withdrawingOutpoint.Clone(),
-				Since:          types.HexUint64(minmalSince).Hex(),
+				Since:          types.HexUint64(minimalSince).Hex(),
 			},
 		},
 		Outputs:     outputs,
@@ -428,7 +439,7 @@ func (wallet *Wallet) SendTransaction(ctx context.Context, transaction ckbtypes.
 // GatherInputs gathers inputs
 func (wallet *Wallet) GatherInputs(ctx context.Context, capacity, minCap, minChangeCap, fee uint64) ([]ckbtypes.Input, uint64, error) {
 	collector := cellcollector.NewCellCollector(wallet.Client, wallet.SkipDataAndType)
-	return collector.GatherInputs(ctx, []string{wallet.lockHashHex.Hex()}, capacity, minChangeCap, minChangeCap, fee)
+	return collector.GatherInputs(ctx, []string{wallet.lockHashHex.Hex()}, capacity, minCap, minChangeCap, fee)
 }
 
 // Lock gets the lock of this wallet
