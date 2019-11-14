@@ -8,5 +8,6 @@ ToDo:
 - [x] Wallet
 - [x] Annotation
 - [x] Test
-- [ ] CI config
+- [x] CI config
+- [ ] Examples
 - [ ] Document
