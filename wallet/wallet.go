@@ -23,7 +23,7 @@ type Wallet struct {
 	HashType        ckbtypes.HashType
 	lockHashHex     *types.HexStr
 	lock            *ckbtypes.Script
-	sysCells        *utils.SysCells
+	SysCells        *utils.SysCells
 }
 
 // NewWallet creates and returns a new Wallet, loads the system cells, cache the lock script and compute its hash
@@ -56,7 +56,7 @@ func NewWallet(client *rpc.Client, key *key.Key, skipDataAndType bool, hashType 
 		Key:             key,
 		SkipDataAndType: skipDataAndType,
 		lockHashHex:     lockHashHex,
-		sysCells:        sysCells,
+		SysCells:        sysCells,
 		lock:            &lock,
 		HashType:        hashType,
 	}, nil
@@ -99,9 +99,9 @@ func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacit
 	case addrtypes.FormatTypeShortLock:
 		switch config.CodeHashIndex {
 		case addrtypes.CodeHashIndex0:
-			codeHash = wallet.sysCells.Secp256k1CodeHash
+			codeHash = wallet.SysCells.Secp256k1CodeHash
 		case addrtypes.CodeHashIndex1:
-			codeHash = wallet.sysCells.MultiSignSecpCellTypeHash
+			codeHash = wallet.SysCells.MultiSignSecpCellTypeHash
 		}
 	case addrtypes.FormatTypeCode, addrtypes.FormatTypeData:
 		codeHash = config.CodeHash
@@ -150,11 +150,11 @@ func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacit
 	}
 
 	if useDepGroup {
-		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeDepGroup, OutPoint: *wallet.sysCells.Secp256k1GroupOutPoint})
-		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeDepGroup, OutPoint: *wallet.sysCells.MultiSignSecpGroupOutPoint})
+		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeDepGroup, OutPoint: *wallet.SysCells.Secp256k1GroupOutPoint})
+		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeDepGroup, OutPoint: *wallet.SysCells.MultiSignSecpGroupOutPoint})
 	} else {
-		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeCode, OutPoint: *wallet.sysCells.Secp256k1CodeOutPoint})
-		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeCode, OutPoint: *wallet.sysCells.Secp256k1DataOutPoint})
+		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeCode, OutPoint: *wallet.SysCells.Secp256k1CodeOutPoint})
+		tx.CellDeps = append(tx.CellDeps, ckbtypes.CellDep{DepType: ckbtypes.DepTypeCode, OutPoint: *wallet.SysCells.Secp256k1DataOutPoint})
 	}
 
 	return utils.SignTransaction(*wallet.Key, *tx)
@@ -211,8 +211,8 @@ func (wallet *Wallet) DepositToDAO(ctx context.Context, capacity, fee uint64) (*
 		Version:    types.HexUint64(0).Hex(),
 		HeaderDeps: []string{},
 		CellDeps: []ckbtypes.CellDep{
-			{OutPoint: *wallet.sysCells.Secp256k1GroupOutPoint, DepType: ckbtypes.DepTypeDepGroup},
-			{OutPoint: *wallet.sysCells.DaoOutPoint, DepType: ckbtypes.DepTypeCode},
+			{OutPoint: *wallet.SysCells.Secp256k1GroupOutPoint, DepType: ckbtypes.DepTypeDepGroup},
+			{OutPoint: *wallet.SysCells.DaoOutPoint, DepType: ckbtypes.DepTypeCode},
 		},
 		Inputs:      inputs,
 		Outputs:     outputs,
@@ -291,8 +291,8 @@ func (wallet *Wallet) StartWithdrawingFromDAO(ctx context.Context, depositOutPoi
 	tx := ckbtypes.Transaction{
 		Version: types.HexUint64(0).Hex(),
 		CellDeps: []ckbtypes.CellDep{
-			{OutPoint: *wallet.sysCells.Secp256k1GroupOutPoint, DepType: ckbtypes.DepTypeDepGroup},
-			{OutPoint: *wallet.sysCells.DaoOutPoint, DepType: ckbtypes.DepTypeCode},
+			{OutPoint: *wallet.SysCells.Secp256k1GroupOutPoint, DepType: ckbtypes.DepTypeDepGroup},
+			{OutPoint: *wallet.SysCells.DaoOutPoint, DepType: ckbtypes.DepTypeCode},
 		},
 		HeaderDeps:  []string{depositBlock.Header.Hash},
 		Inputs:      inputs,
@@ -378,11 +378,11 @@ func (wallet *Wallet) GenWithdrawFromDAOTx(ctx context.Context, depositOutpoint,
 		Version: types.HexUint64(0).Hex(),
 		CellDeps: []ckbtypes.CellDep{
 			{
-				OutPoint: *wallet.sysCells.DaoOutPoint,
+				OutPoint: *wallet.SysCells.DaoOutPoint,
 				DepType:  ckbtypes.DepTypeCode,
 			},
 			{
-				OutPoint: *wallet.sysCells.Secp256k1GroupOutPoint,
+				OutPoint: *wallet.SysCells.Secp256k1GroupOutPoint,
 				DepType:  ckbtypes.DepTypeDepGroup,
 			},
 		},
