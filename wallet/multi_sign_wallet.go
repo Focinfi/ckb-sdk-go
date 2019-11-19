@@ -3,6 +3,7 @@ package wallet
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/Focinfi/ckb-sdk-go/address"
 	"github.com/Focinfi/ckb-sdk-go/cellcollector"
@@ -19,9 +20,10 @@ type MultiSignWalletConfig struct {
 	RequireN  uint8
 	Threshold uint8
 	PubKeys   []string
+	Since     uint64
 }
 
-func NewMultiSignWalletConfig(requireN uint8, threshold uint8, pubKeys []string) (*MultiSignWalletConfig, error) {
+func NewMultiSignWalletConfig(requireN uint8, threshold uint8, pubKeys []string, since uint64) (*MultiSignWalletConfig, error) {
 	if len(pubKeys) > 255 {
 		return nil, errtypes.WrapErr(errtypes.MultiSignWalletConfigErrPubKeysNumberTooBig, errors.New("must less than 256"))
 	}
@@ -29,6 +31,7 @@ func NewMultiSignWalletConfig(requireN uint8, threshold uint8, pubKeys []string)
 		RequireN:  requireN,
 		Threshold: threshold,
 		PubKeys:   pubKeys,
+		Since:     since,
 	}, nil
 }
 
@@ -57,6 +60,15 @@ func (config MultiSignWalletConfig) Blake160() ([]byte, error) {
 	return blake160.Blake160Binary(bin)
 }
 
+func (config MultiSignWalletConfig) LockArgs() (*types.HexStr, error) {
+	blake160Bytes, err := config.Blake160()
+	if err != nil {
+		return nil, err
+	}
+	sinceBytes := types.HexUint64(config.Since).LittleEndianBytes(8)
+	return types.NewHexStr(blake160Bytes).AppendBytes(sinceBytes), nil
+}
+
 type MultiSignWallet struct {
 	Client          *rpc.Client
 	Config          *MultiSignWalletConfig
@@ -72,12 +84,12 @@ func NewMultiSignWallet(client rpc.Client, config MultiSignWalletConfig, skipDat
 	if err != nil {
 		return nil, err
 	}
-	configBlake160, err := config.Blake160()
+	lockArgs, err := config.LockArgs()
 	if err != nil {
 		return nil, err
 	}
 	lock := ckbtypes.Script{
-		Args:     types.NewHexStr(configBlake160).Hex(),
+		Args:     lockArgs.Hex(),
 		CodeHash: sysCells.MultiSignSecpCellTypeHash.Hex(),
 		HashType: ckbtypes.HashTypeType,
 	}
@@ -98,15 +110,14 @@ func NewMultiSignWallet(client rpc.Client, config MultiSignWalletConfig, skipDat
 }
 
 func (wallet MultiSignWallet) Address() (string, error) {
-	blake160Bin, err := wallet.Config.Blake160()
+	lockArgs, err := wallet.Config.LockArgs()
 	if err != nil {
 		return "", err
 	}
-	payload := append([]byte{
-		addrtypes.FormatTypeShortLock,
-		addrtypes.CodeHashIndex1,
-	}, blake160Bin...)
-
+	payload := append([]byte{addrtypes.FormatTypeFullType})
+	payload = append(payload, wallet.sysCells.MultiSignSecpCellTypeHash.Bytes()...)
+	payload = append(payload, lockArgs.Bytes()...)
+	fmt.Println(addrtypes.FormatTypeFullType, wallet.sysCells.MultiSignSecpCellTypeHash.Len(), lockArgs.Len())
 	return address.EncodeAddress(addrtypes.PrefixForMode(wallet.Mode), payload)
 }
 
@@ -124,18 +135,14 @@ func (wallet MultiSignWallet) GenerateTx(ctx context.Context, targetAddr string,
 	if len(privKeys) != int(wallet.Config.Threshold) {
 		return nil, errtypes.WrapErr(errtypes.MultiSignWalletPrivKeysNumberNotMatchThreshold, nil)
 	}
-	targetAddrConfig, err := address.Parse(targetAddr, wallet.Mode)
+	targetAddrLock, err := utils.LockScriptFormAddress(targetAddr, wallet.Mode, *wallet.sysCells)
 	if err != nil {
 		return nil, err
 	}
 
 	output := ckbtypes.Output{
 		Capacity: types.HexUint64(capacity).Hex(),
-		Lock: ckbtypes.Script{
-			Args:     targetAddrConfig.Args.Hex(),
-			CodeHash: wallet.sysCells.MultiSignSecpCellTypeHash.Hex(),
-			HashType: ckbtypes.HashTypeType,
-		},
+		Lock:     *targetAddrLock,
 	}
 
 	changeOutput := ckbtypes.Output{Lock: *wallet.lock}
@@ -143,11 +150,12 @@ func (wallet MultiSignWallet) GenerateTx(ctx context.Context, targetAddr string,
 	if err != nil {
 		return nil, err
 	}
-	minCap := outputCap + uint64(len(data))
-	minChangeCap, err := output.ByteSize()
+	changeOutputCap, err := changeOutput.ByteSize()
 	if err != nil {
 		return nil, err
 	}
+	minCap := (outputCap + uint64(len(data))) * types.OneCKBShannon
+	minChangeCap := changeOutputCap * types.OneCKBShannon
 	collector := cellcollector.NewCellCollector(wallet.Client, wallet.SkipDataAndType)
 	inputs, inputsCap, err := collector.GatherInputs(ctx, []string{wallet.lockHash.Hex()}, capacity, minCap, minChangeCap, fee)
 	if err != nil {
@@ -164,6 +172,9 @@ func (wallet MultiSignWallet) GenerateTx(ctx context.Context, targetAddr string,
 		outputsData = append(outputsData, types.HexStrPrefix)
 	}
 
+	for _, input := range inputs {
+		input.Since = types.HexUint64(wallet.Config.Since).Hex()
+	}
 	witnesses := append([]interface{}{ckbtypes.Witness{}}, utils.EmptyWitnessesByLen(len(inputs)-1)...)
 	tx := ckbtypes.Transaction{
 		Version: types.HexUint64(0).Hex(),

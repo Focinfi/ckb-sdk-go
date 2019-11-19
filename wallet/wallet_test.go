@@ -67,6 +67,7 @@ func TestWallet_SendCapacity(t *testing.T) {
 }
 
 func TestWallet_SendCapacity_MultiSignAddr(t *testing.T) {
+	t.Log(len(multiSignWalletAddr))
 	txHash, err := bar.SendCapacity(context.Background(), multiSignWalletAddr, 900*types.OneCKBShannon, nil, types.OneCKBShannon)
 	if err != nil {
 		t.Fatal(err)

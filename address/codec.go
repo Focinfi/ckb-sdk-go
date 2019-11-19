@@ -1,9 +1,9 @@
 package address
 
 import (
+	"github.com/Focinfi/ckb-sdk-go/crypto/bech32"
 	"github.com/Focinfi/ckb-sdk-go/types/addrtypes"
 	"github.com/Focinfi/ckb-sdk-go/types/errtypes"
-	"github.com/btcsuite/btcutil/bech32"
 )
 
 // EncodeAddress encode the given prefix and payload data into the address with bech32

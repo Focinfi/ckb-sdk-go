@@ -4,12 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Focinfi/ckb-sdk-go/address"
 	"github.com/Focinfi/ckb-sdk-go/cellcollector"
 	"github.com/Focinfi/ckb-sdk-go/key"
 	"github.com/Focinfi/ckb-sdk-go/rpc"
 	"github.com/Focinfi/ckb-sdk-go/types"
-	"github.com/Focinfi/ckb-sdk-go/types/addrtypes"
 	"github.com/Focinfi/ckb-sdk-go/types/ckbtypes"
 	"github.com/Focinfi/ckb-sdk-go/types/errtypes"
 	"github.com/Focinfi/ckb-sdk-go/utils"
@@ -93,31 +91,15 @@ func (wallet *Wallet) GetUnspentCells(ctx context.Context, needCap uint64) ([]ck
 
 // GenerateTx generates a transaction ready to send
 func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacity uint64, data []byte, fee uint64, useDepGroup bool) (*ckbtypes.Transaction, error) {
-	config, err := address.Parse(targetAddr, wallet.Key.Address.Mode)
+	targetAddrLock, err := utils.LockScriptFormAddress(targetAddr, wallet.Key.Address.Mode, *wallet.sysCells)
 	if err != nil {
 		return nil, err
-	}
-	var codeHash *types.HexStr
-	switch config.FormatType {
-	case addrtypes.FormatTypeShortLock:
-		switch config.CodeHashIndex {
-		case addrtypes.CodeHashIndex0:
-			codeHash = wallet.sysCells.Secp256k1TypeHash
-		case addrtypes.CodeHashIndex1:
-			codeHash = wallet.sysCells.MultiSignSecpCellTypeHash
-		}
-	case addrtypes.FormatTypeCode, addrtypes.FormatTypeData:
-		codeHash = config.CodeHash
 	}
 
 	dataHex := types.NewHexStr(data)
 	output := ckbtypes.Output{
 		Capacity: types.HexUint64(capacity).Hex(),
-		Lock: ckbtypes.Script{
-			Args:     config.Args.Hex(),
-			CodeHash: codeHash.Hex(),
-			HashType: ckbtypes.HashTypeType,
-		},
+		Lock:     *targetAddrLock,
 	}
 	outputByteSize, err := output.ByteSize()
 	if err != nil {

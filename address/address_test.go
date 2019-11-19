@@ -43,7 +43,7 @@ func TestAddress_GenerateFullPayloadAddress(t *testing.T) {
 		{
 			name: "test net in code format type",
 			args: args{
-				formatType: addrtypes.FormatTypeCode,
+				formatType: addrtypes.FormatTypeFullType,
 				codeHash:   "0xabcd",
 				args:       "0x1234",
 				mode:       types.ModeTestNet,
@@ -54,7 +54,7 @@ func TestAddress_GenerateFullPayloadAddress(t *testing.T) {
 		{
 			name: "test net in data format type",
 			args: args{
-				formatType: addrtypes.FormatTypeData,
+				formatType: addrtypes.FormatTypeFullData,
 				codeHash:   "0xabcd",
 				args:       "0x1234",
 				mode:       types.ModeTestNet,
@@ -76,7 +76,7 @@ func TestAddress_GenerateFullPayloadAddress(t *testing.T) {
 		{
 			name: "test net with wrong hex format code hash",
 			args: args{
-				formatType: addrtypes.FormatTypeCode,
+				formatType: addrtypes.FormatTypeFullType,
 				codeHash:   "0xabcx",
 				args:       "0x1234",
 				mode:       types.ModeTestNet,
@@ -87,7 +87,7 @@ func TestAddress_GenerateFullPayloadAddress(t *testing.T) {
 		{
 			name: "test net with wrong hex format args",
 			args: args{
-				formatType: addrtypes.FormatTypeCode,
+				formatType: addrtypes.FormatTypeFullType,
 				codeHash:   "0xabcx",
 				args:       "0x1234",
 				mode:       types.ModeTestNet,

@@ -1,6 +1,8 @@
 package address
 
 import (
+	"fmt"
+
 	"github.com/Focinfi/ckb-sdk-go/types"
 	"github.com/Focinfi/ckb-sdk-go/types/addrtypes"
 	"github.com/Focinfi/ckb-sdk-go/types/errtypes"
@@ -29,13 +31,13 @@ func Parse(address string, mode types.Mode) (*AddrConfig, error) {
 
 	formatType := addrtypes.FormatType(payload[0])
 	switch formatType {
-	case addrtypes.FormatTypeShortLock:
+	case addrtypes.FormatTypeShort:
 		return parseShortPayloadAddress(formatType, payload[1:])
-	case addrtypes.FormatTypeCode, addrtypes.FormatTypeData:
+	case addrtypes.FormatTypeFullType, addrtypes.FormatTypeFullData:
 		return parseFullPayloadAddress(formatType, payload[1:])
 	}
 
-	return nil, errtypes.WrapErr(errtypes.AddressErrFormatTypeWrong, nil)
+	return nil, errtypes.WrapErr(errtypes.AddressErrFormatTypeWrong, fmt.Errorf("unsupported format type: %d", formatType))
 }
 
 // ParseShortPayloadAddress
@@ -65,7 +67,7 @@ func ParseShortPayloadAddressArg(address string, mode types.Mode) (*types.HexStr
 }
 
 func parseShortPayloadAddress(formatType addrtypes.FormatType, payload []byte) (*AddrConfig, error) {
-	if formatType != addrtypes.FormatTypeShortLock {
+	if formatType != addrtypes.FormatTypeShort {
 		return nil, errtypes.WrapErr(errtypes.AddressErrFormatTypeWrong, nil)
 	}
 	hashInfo, err := addrtypes.NewHashInfo(payload)
@@ -98,8 +100,8 @@ func ParseFullPayloadAddress(address string, mode types.Mode) (*AddrConfig, erro
 }
 
 func parseFullPayloadAddress(formatType addrtypes.FormatType, payload []byte) (*AddrConfig, error) {
-	if addrtypes.IsFullPayloadFormatType(formatType) {
-		return nil, errtypes.WrapErr(errtypes.AddressErrFormatTypeWrong, nil)
+	if !addrtypes.IsFullPayloadFormatType(formatType) {
+		return nil, errtypes.WrapErr(errtypes.AddressErrFormatTypeWrong, fmt.Errorf("format type (0x%x) is not 0x2 or 0x4", formatType))
 	}
 	if len(payload) <= 32 {
 		return nil, errtypes.WrapErr(errtypes.AddressErrTooShort, nil)

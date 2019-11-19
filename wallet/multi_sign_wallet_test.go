@@ -55,7 +55,7 @@ func TestMultiSignWalletConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewMultiSignWalletConfig(tt.args.requireN, tt.args.threshold, tt.args.pubKeys)
+			got, err := NewMultiSignWalletConfig(tt.args.requireN, tt.args.threshold, tt.args.pubKeys, 100)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewMultiSignWalletConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return

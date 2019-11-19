@@ -20,7 +20,7 @@ func TestParseShortPayloadAddress(t *testing.T) {
 		t.Fatal(err)
 	}
 	expectedData := &AddrConfig{
-		FormatType:    addrtypes.FormatTypeShortLock,
+		FormatType:    addrtypes.FormatTypeShort,
 		CodeHashIndex: addrtypes.CodeHashIndex0,
 		Args:          addr.KeyHash.Blake160,
 	}

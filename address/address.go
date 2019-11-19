@@ -35,7 +35,7 @@ func (addr *Address) Generate() (string, error) {
 		return "", errtypes.WrapErr(errtypes.AddressErrEmptyPubKey, nil)
 	}
 	payload := append([]byte{
-		byte(addrtypes.FormatTypeShortLock),
+		byte(addrtypes.FormatTypeShort),
 		byte(addrtypes.CodeHashIndex0)},
 		addr.KeyHash.Blake160.Bytes()...)
 	return EncodeAddress(addr.Prefix, payload)
@@ -50,7 +50,7 @@ func (addr *Address) GenerateShortPayloadFormatAddress(hash160HexStr string) (st
 		return "", err
 	}
 	payload := append([]byte{
-		byte(addrtypes.FormatTypeShortLock),
+		byte(addrtypes.FormatTypeShort),
 		byte(addrtypes.CodeHashIndex1)},
 		hexStr.Bytes()...)
 	return EncodeAddress(addr.Prefix, payload)
