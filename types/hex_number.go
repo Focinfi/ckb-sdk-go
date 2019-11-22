@@ -9,6 +9,13 @@ import (
 	"strconv"
 )
 
+const (
+	Hex0 = HexUint64(0)
+	Hex1 = HexUint64(1)
+	Hex2 = HexUint64(2)
+	Hex3 = HexUint64(3)
+)
+
 type HexUint64 uint64
 
 func (hexNumber HexUint64) Uint64() uint64 {

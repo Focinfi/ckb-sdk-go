@@ -125,7 +125,7 @@ func (wallet *Wallet) GenerateTx(ctx context.Context, targetAddr string, capacit
 	}
 	witnesses := append([]interface{}{ckbtypes.Witness{}}, utils.EmptyWitnessesByLen(len(inputs)-1)...)
 	tx := &ckbtypes.Transaction{
-		Version:     types.HexUint64(0).Hex(),
+		Version:     types.Hex0.Hex(),
 		CellDeps:    []ckbtypes.CellDep{},
 		HeaderDeps:  []string{},
 		Inputs:      inputs,
@@ -196,7 +196,7 @@ func (wallet *Wallet) DepositToDAO(ctx context.Context, capacity, fee uint64) (*
 	}
 	witnesses := append([]interface{}{ckbtypes.Witness{}}, utils.EmptyWitnessesByLen(len(inputs)-1)...)
 	tx := ckbtypes.Transaction{
-		Version:    types.HexUint64(0).Hex(),
+		Version:    types.Hex0.Hex(),
 		HeaderDeps: []string{},
 		CellDeps: []ckbtypes.CellDep{
 			{OutPoint: *wallet.sysCells.Secp256k1GroupOutPoint, DepType: ckbtypes.DepTypeDepGroup},
@@ -217,7 +217,7 @@ func (wallet *Wallet) DepositToDAO(ctx context.Context, capacity, fee uint64) (*
 	}
 	return &ckbtypes.OutPoint{
 		TxHash: txHash,
-		Index:  types.HexUint64(0).Hex(),
+		Index:  types.Hex0.Hex(),
 	}, nil
 }
 
@@ -272,12 +272,12 @@ func (wallet *Wallet) StartWithdrawingFromDAO(ctx context.Context, depositOutPoi
 
 	firstInput := ckbtypes.Input{
 		PreviousOutput: *depositOutPoint.Clone(),
-		Since:          types.HexUint64(0).Hex(),
+		Since:          types.Hex0.Hex(),
 	}
 	inputs = append([]ckbtypes.Input{firstInput}, inputs...)
 	witness := append([]interface{}{ckbtypes.Witness{}}, utils.EmptyWitnessesByLen(len(inputs)-1)...)
 	tx := ckbtypes.Transaction{
-		Version: types.HexUint64(0).Hex(),
+		Version: types.Hex0.Hex(),
 		CellDeps: []ckbtypes.CellDep{
 			{OutPoint: *wallet.sysCells.Secp256k1GroupOutPoint, DepType: ckbtypes.DepTypeDepGroup},
 			{OutPoint: *wallet.sysCells.DaoOutPoint, DepType: ckbtypes.DepTypeCode},
@@ -298,7 +298,7 @@ func (wallet *Wallet) StartWithdrawingFromDAO(ctx context.Context, depositOutPoi
 	}
 	return &ckbtypes.OutPoint{
 		TxHash: txHash,
-		Index:  types.HexUint64(0).Hex(),
+		Index:  types.Hex0.Hex(),
 	}, nil
 }
 
@@ -368,7 +368,7 @@ func (wallet *Wallet) GenWithdrawFromDAOTx(ctx context.Context, depositOutpoint,
 	}
 	outputsData := []string{types.HexStrPrefix}
 	tx := ckbtypes.Transaction{
-		Version: types.HexUint64(0).Hex(),
+		Version: types.Hex0.Hex(),
 		CellDeps: []ckbtypes.CellDep{
 			{
 				OutPoint: *wallet.sysCells.DaoOutPoint,

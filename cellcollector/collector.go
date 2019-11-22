@@ -121,7 +121,7 @@ func (collector *CellCollector) GatherInputs(ctx context.Context, lockHashes []s
 	for _, cell := range cells {
 		input := ckbtypes.Input{
 			PreviousOutput: cell.OutPoint,
-			Since:          types.HexUint64(0).Hex(),
+			Since:          types.Hex0.Hex(),
 		}
 		hexNum, err := types.ParseHexUint64(cell.Capacity)
 		if err != nil {

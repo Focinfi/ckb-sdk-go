@@ -3,7 +3,6 @@ package wallet
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/Focinfi/ckb-sdk-go/address"
 	"github.com/Focinfi/ckb-sdk-go/cellcollector"
@@ -117,7 +116,6 @@ func (wallet MultiSignWallet) Address() (string, error) {
 	payload := append([]byte{addrtypes.FormatTypeFullType})
 	payload = append(payload, wallet.sysCells.MultiSignSecpCellTypeHash.Bytes()...)
 	payload = append(payload, lockArgs.Bytes()...)
-	fmt.Println(addrtypes.FormatTypeFullType, wallet.sysCells.MultiSignSecpCellTypeHash.Len(), lockArgs.Len())
 	return address.EncodeAddress(addrtypes.PrefixForMode(wallet.Mode), payload)
 }
 
@@ -177,7 +175,7 @@ func (wallet MultiSignWallet) GenerateTx(ctx context.Context, targetAddr string,
 	}
 	witnesses := append([]interface{}{ckbtypes.Witness{}}, utils.EmptyWitnessesByLen(len(inputs)-1)...)
 	tx := ckbtypes.Transaction{
-		Version: types.HexUint64(0).Hex(),
+		Version: types.Hex0.Hex(),
 		CellDeps: []ckbtypes.CellDep{
 			{OutPoint: *wallet.sysCells.MultiSignSecpGroupOutPoint, DepType: ckbtypes.DepTypeDepGroup},
 		},

@@ -82,21 +82,21 @@ func LoadSystemCells(client rpc.Client) (*SysCells, error) {
 		return nil, err
 	}
 	secp256k1CodeOutPoint := &ckbtypes.OutPoint{
-		Index:  types.HexUint64(1).Hex(),
+		Index:  types.Hex1.Hex(),
 		TxHash: sysCellTrans.Hash,
 	}
 	secp256k1DataOutPoint := &ckbtypes.OutPoint{
-		Index:  types.HexUint64(3).Hex(),
+		Index:  types.Hex3.Hex(),
 		TxHash: sysCellTrans.Hash,
 	}
 	secp256k1GroupTrans := block.Transactions[1]
 	secp256k1GroupOutPoint := &ckbtypes.OutPoint{
-		Index:  types.HexUint64(0).Hex(),
+		Index:  types.Hex0.Hex(),
 		TxHash: secp256k1GroupTrans.Hash,
 	}
 	// DAO
 	daoOutPoint := &ckbtypes.OutPoint{
-		Index:  types.HexUint64(2).Hex(),
+		Index:  types.Hex2.Hex(),
 		TxHash: sysCellTrans.Hash,
 	}
 	daoCode := sysCellTrans.OutputsData[2]
@@ -122,7 +122,7 @@ func LoadSystemCells(client rpc.Client) (*SysCells, error) {
 		return nil, errtypes.WrapErr(errtypes.RPCErrGetGenesisBlockBroken, fmt.Errorf("hash multisign type script failed: %v", err))
 	}
 	multiSignSecpGroupOutPoint := ckbtypes.OutPoint{
-		Index:  types.HexUint64(1).Hex(),
+		Index:  types.Hex1.Hex(),
 		TxHash: secp256k1GroupTrans.Hash,
 	}
 

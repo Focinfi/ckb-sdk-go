@@ -5,6 +5,10 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/Focinfi/ckb-sdk-go/serializers"
+
+	"github.com/Focinfi/ckb-sdk-go/crypto/blake2b"
+
 	"github.com/Focinfi/ckb-sdk-go/rpc"
 	"github.com/Focinfi/ckb-sdk-go/types"
 	"github.com/Focinfi/ckb-sdk-go/types/ckbtypes"
@@ -28,7 +32,7 @@ var (
 	fooAddr, _ = foo.Key.Address.Generate()
 )
 
-func TestUDT(t *testing.T) {
+func TestUDT_Init(t *testing.T) {
 	// duktape data
 	duktapData, err := ioutil.ReadFile("./duktape")
 	if err != nil {
@@ -42,4 +46,54 @@ func TestUDT(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("duktapData transaction hash:", hashTx)
+}
+
+func TestUDT_Deploy(t *testing.T) {
+	// duktape data
+	duktapData, err := ioutil.ReadFile("./duktape")
+	if err != nil {
+		t.Fatal(err)
+	}
+	duktapeCodeHash, err := blake2b.Digest(duktapData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	duktapeCodeHashHex := types.NewHexStr(duktapeCodeHash)
+
+	duktapeCellDep := ckbtypes.CellDep{
+		DepType: ckbtypes.DepTypeCode,
+		OutPoint: ckbtypes.OutPoint{
+			Index:  types.Hex0.Hex(),
+			TxHash: duktapeTxHash,
+		},
+	}
+
+	genesisUDTCount := types.NewHexStr(types.HexUint64(1000000).LittleEndianBytes(4))
+	genesisTx, err := bar.GenerateTx(context.Background(), barAddr, 20000*types.OneCKBShannon, genesisUDTCount.Bytes(), types.OneCKBShannon, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	firstInputBytes, err := serializers.NewInput(genesisTx.Inputs[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	firstInputHex := types.NewHexStr(firstInputBytes.Serialize())
+	code, err := ioutil.ReadFile("./demo.js")
+	if err != nil {
+		t.Fatal(err)
+	}
+	codeHex := types.NewHexStr(code)
+	duktapeUDTScript := ckbtypes.Script{
+		Args:     codeHex.Hex() + firstInputHex.Hex(),
+		CodeHash: duktapeCodeHashHex.Hex(),
+		HashType: ckbtypes.HashTypeData,
+	}
+
+	t.Log(duktapeCellDep)
+
+	slr, err := serializers.NewScript(duktapeUDTScript)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(string(slr.Serialize()))
 }
